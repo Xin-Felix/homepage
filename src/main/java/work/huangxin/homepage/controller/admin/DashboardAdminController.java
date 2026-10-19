@@ -24,7 +24,7 @@ public class DashboardAdminController {
     @GetMapping
     public ApiResponse<Dashboard> get() {
         return ApiResponse.ok(new Dashboard(
-                siteService.getProfile().getViews(),
+                siteService.getViewCount(),
                 messageService.count(),
                 messageService.countUnread(),
                 experienceService.count(),

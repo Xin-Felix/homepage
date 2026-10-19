@@ -279,7 +279,7 @@
         stat('全部留言', d.messages, '#messages'),
         stat('工作经历', d.experiences, '#experiences'),
         stat('项目', d.projects, '#projects')),
-      h('p', { class: 'muted' }, '访问量按 IP 去重，同一 IP 30 分钟内只计一次。'));
+      h('p', { class: 'muted' }, '统计主页访问次数，每次打开或刷新主页都会计数。'));
   }
 
   // ---------------------------------------------------------------- 基本信息

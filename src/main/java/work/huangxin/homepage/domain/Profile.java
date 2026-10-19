@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -29,6 +30,7 @@ import work.huangxin.homepage.common.StringListConverter;
 @Getter
 @Setter
 @NoArgsConstructor
+@DynamicUpdate
 @Entity
 @Table(name = "profile")
 public class Profile {

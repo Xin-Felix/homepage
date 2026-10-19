@@ -1,6 +1,5 @@
 package work.huangxin.homepage.service;
 
-import java.time.Duration;
 import java.util.List;
 
 import org.springframework.beans.BeanUtils;
@@ -8,9 +7,6 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
 
 import work.huangxin.homepage.domain.ContactLink;
 import work.huangxin.homepage.domain.Experience;
@@ -33,12 +29,6 @@ public class SiteService {
     private final ExperienceRepository experienceRepository;
     private final ProjectRepository projectRepository;
     private final ContactLinkRepository contactLinkRepository;
-
-    /** 同一 IP 30 分钟内只计一次访问 */
-    private final Cache<String, Boolean> recentVisitors = Caffeine.newBuilder()
-            .expireAfterWrite(Duration.ofMinutes(30))
-            .maximumSize(50_000)
-            .build();
 
     public SiteService(ProfileRepository profileRepository,
                        ExperienceRepository experienceRepository,
@@ -73,10 +63,22 @@ public class SiteService {
         return profileRepository.save(profile);
     }
 
-    public void recordView(String ip) {
-        if (recentVisitors.asMap().putIfAbsent(ip, Boolean.TRUE) == null) {
-            profileRepository.incrementViews(Profile.SINGLETON_ID);
+    /**
+     * 记录一次主页 PV，并返回数据库中的最新累计值。
+     * 访问量不放进主页内容缓存，避免页面长期显示旧数字。
+     */
+    @Transactional
+    public long recordView() {
+        int updatedRows = profileRepository.incrementViews(Profile.SINGLETON_ID);
+        if (updatedRows != 1) {
+            throw new IllegalStateException("主页资料不存在，无法记录访问量");
         }
+        return getViewCount();
+    }
+
+    @Transactional(readOnly = true)
+    public long getViewCount() {
+        return profileRepository.findViewsById(Profile.SINGLETON_ID).orElse(0L);
     }
 
     public record SiteData(Profile profile,
