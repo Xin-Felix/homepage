@@ -19,16 +19,15 @@
 
 ## 用 Docker 运行（推荐）
 
-所有组件都跑在容器里，本机只需要 Docker，不依赖本机的 JDK / Maven / MySQL。
+应用和数据库都跑在容器里，本机只需要 Docker，不依赖本机的 JDK / Maven / MySQL。留言提醒直接连接真实 SMTP，不需要 Mailpit。
 
 | 服务 | 镜像 | 本机地址 |
 |---|---|---|
 | app | 由 `Dockerfile` 构建（容器内 Maven 打包，JRE 17 运行） | http://localhost:8080 ，后台 http://localhost:8080/admin |
 | mysql | `mysql:8.4.11`，数据在命名卷 `homepage_mysql-data` | `127.0.0.1:3307`，库 / 用户都是 `homepage` |
-| mailpit | `axllent/mailpit:v1.31.6`，本地收信箱，接住留言提醒邮件 | http://localhost:8025 |
 
 ```bash
-cp .env.example .env      # 填后台密码和数据库密码
+cp .env.example .env      # 填后台、数据库密码；需要邮件提醒时再填 SMTP
 docker compose up -d --build
 ```
 
@@ -57,7 +56,7 @@ ADMIN_PASSWORD='换成你的密码' ./mvnw spring-boot:run
 
 ## 部署到服务器
 
-服务器装好 Docker 后，同样用 `docker compose up -d --build`；`.env` 里换成正式密码，邮件提醒换成真实 SMTP（见 `.env.example`）。
+服务器装好 Docker 后，同样用 `docker compose up -d --build`；`.env` 里换成正式密码并配置真实 SMTP（见 `.env.example`）。
 应用用 `prod` 配置运行，表结构由 Hibernate 自动创建（`ddl-auto: update`），没设 `ADMIN_PASSWORD` 会拒绝启动。
 
 不用 Docker 的话，`./mvnw -DskipTests package` 打包后：
@@ -85,26 +84,26 @@ prod 配置开启了 `server.forward-headers-strategy=native`，只信任内网�
 
 ## 配置项
 
-用 Docker 时在 `.env` 里配置，可用的变量和邮件示例见 `.env.example`。直接运行 jar 时用下面这些环境变量：
+用 Docker 时在不会提交的 `.env` 里配置，变量示例见 `.env.example`。真实 SMTP 授权码不要写进 `.env.example`。
 
 | 环境变量 | 说明 | 默认 |
 |---|---|---|
 | `ADMIN_PASSWORD` | 后台密码 | 开发环境随机生成 |
-| `PORT` | 端口 | 8080 |
-| `DB_URL` / `DB_USERNAME` / `DB_PASSWORD` | MySQL 连接（prod） | 本机 3306 / root |
-| `NOTIFY_EMAIL` | 新留言通知到这个邮箱 | 不发送 |
-| `NOTIFY_FROM` | 发件人（没配 SMTP 用户名时用） | 空 |
-| `SPRING_MAIL_HOST` 等 | 发信 SMTP，见下 | 不配置 |
+| `APP_PORT` | Docker 映射的应用端口 | 8080 |
+| `MYSQL_PASSWORD` / `MYSQL_ROOT_PASSWORD` | MySQL 密码 | 必填 |
+| `NOTIFY_EMAIL` | 新留言通知到这个邮箱 | 空，不发送 |
+| `NOTIFY_FROM` | 发件人；设置了 `MAIL_USERNAME` 时优先用后者 | 空 |
+| `MAIL_HOST` / `MAIL_PORT` | SMTP 地址与端口 | host 空 / 465 |
+| `MAIL_USERNAME` / `MAIL_PASSWORD` | SMTP 用户和授权码 | 空 |
+| `MAIL_AUTH` | 是否启用 SMTP 认证 | true |
+| `MAIL_SSL` | 直接 SSL（常见端口 465） | false |
+| `MAIL_STARTTLS` | STARTTLS（常见端口 587） | false |
 
-新留言邮件提醒（以 QQ 邮箱为例，密码填 SMTP 授权码）：
+QQ 邮箱通常使用 `MAIL_PORT=465`、`MAIL_SSL=true`；Gmail 等 STARTTLS 服务通常使用 `MAIL_PORT=587`、`MAIL_STARTTLS=true`。修改 `.env` 后执行：
 
 ```bash
-export NOTIFY_EMAIL=you@example.com
-export SPRING_MAIL_HOST=smtp.qq.com
-export SPRING_MAIL_PORT=465
-export SPRING_MAIL_USERNAME=xxx@qq.com
-export SPRING_MAIL_PASSWORD='SMTP 授权码'
-export SPRING_MAIL_PROPERTIES_MAIL_SMTP_SSL_ENABLE=true
+docker compose up -d --force-recreate app
+docker compose logs -f app
 ```
 
 限流、登录有效期等其它参数见 `src/main/resources/application.yml` 的 `homepage.*`。
@@ -112,9 +111,9 @@ export SPRING_MAIL_PROPERTIES_MAIL_SMTP_SSL_ENABLE=true
 ## 目录结构
 
 ```
-docker-compose.yml   app + mysql + mailpit 编排
+docker-compose.yml   app + mysql 编排
 Dockerfile           多阶段构建：Maven 打包 → JRE 运行
-.env.example         Docker 环境变量模板（复制为 .env）
+.env.example         环境变量模板；真实密码只放在 .env
 src/main/java/work/huangxin/homepage
 ├── auth/          后台登录、token、鉴权拦截器
 ├── ratelimit/     @RateLimit 注解 + Bucket4j 限流

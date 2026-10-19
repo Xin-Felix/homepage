@@ -1,5 +1,5 @@
 # 本地一键启动：docker compose up -d --build
-# 所有组件都在容器里，数据放在 Docker 命名卷，不依赖本机安装的 MySQL / JDK / Maven。
+# 应用与数据库都在容器里，数据放在 Docker 命名卷，不依赖本机安装的 MySQL / JDK / Maven。
 name: homepage
 
 services:
@@ -25,15 +25,6 @@ services:
       retries: 30
       start_period: 30s
 
-  # 本地收信箱：接住留言提醒邮件，网页查看 http://localhost:8025
-  mailpit:
-    image: axllent/mailpit:v1.31.6
-    restart: unless-stopped
-    environment:
-      TZ: Asia/Shanghai
-    ports:
-      - "127.0.0.1:${MAILPIT_PORT:-8025}:8025"
-
   app:
     build: .
     image: homepage-app:local
@@ -41,22 +32,23 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
-      mailpit:
-        condition: service_started
     environment:
       SPRING_PROFILES_ACTIVE: prod
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:?请在 .env 里设置 ADMIN_PASSWORD}
       DB_URL: jdbc:mysql://mysql:3306/homepage?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
       DB_USERNAME: homepage
       DB_PASSWORD: ${MYSQL_PASSWORD}
-      # 留言邮件提醒：默认发到本地 Mailpit；换成真实邮箱见 .env.example
-      NOTIFY_EMAIL: ${NOTIFY_EMAIL:-me@homepage.local}
-      NOTIFY_FROM: ${NOTIFY_FROM:-homepage@homepage.local}
-      SPRING_MAIL_HOST: ${MAIL_HOST:-mailpit}
-      SPRING_MAIL_PORT: ${MAIL_PORT:-1025}
+      # 真实 SMTP 邮件提醒；不配置 NOTIFY_EMAIL / MAIL_HOST 时不会发送邮件
+      NOTIFY_EMAIL: ${NOTIFY_EMAIL:-}
+      NOTIFY_FROM: ${NOTIFY_FROM:-}
+      SPRING_MAIL_HOST: ${MAIL_HOST:-}
+      SPRING_MAIL_PORT: ${MAIL_PORT:-465}
       SPRING_MAIL_USERNAME: ${MAIL_USERNAME:-}
       SPRING_MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      SPRING_MAIL_DEFAULT_ENCODING: UTF-8
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH: ${MAIL_AUTH:-true}
       SPRING_MAIL_PROPERTIES_MAIL_SMTP_SSL_ENABLE: ${MAIL_SSL:-false}
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE: ${MAIL_STARTTLS:-false}
       TZ: Asia/Shanghai
       JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=75 -Duser.timezone=Asia/Shanghai
     ports:
