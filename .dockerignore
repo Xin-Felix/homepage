@@ -1,0 +1,4 @@
+# 构建镜像只需要 pom.xml 和 src/
+*
+!pom.xml
+!src/

@@ -1,0 +1,17 @@
+# 构建产物
+target/
+
+# 本地 H2 数据库文件
+data/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.DS_Store
+
+# 本地私密配置
+.env
+*.local.yml
+application-local.yml
+*.log

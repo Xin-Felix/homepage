@@ -1,0 +1,43 @@
+# 默认配置：本地开发直接 ./mvnw spring-boot:run 即可，数据存在 ./data 下的 H2 文件库
+spring:
+  application:
+    name: homepage
+  datasource:
+    url: jdbc:h2:file:./data/homepage
+    username: sa
+    password:
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        auto_quote_keyword: true
+  jackson:
+    time-zone: Asia/Shanghai
+  # 只设超时，不设 host：没配置 SMTP 时不会创建邮件发送器
+  mail:
+    properties:
+      mail.smtp.connectiontimeout: 5000
+      mail.smtp.timeout: 10000
+      mail.smtp.writetimeout: 10000
+
+server:
+  port: ${PORT:8080}
+
+homepage:
+  admin:
+    # 后台密码。不配置时开发环境会随机生成一个并打印在启动日志里；prod 环境必须配置
+    password: ${ADMIN_PASSWORD:}
+    token-ttl: 12h
+  rate-limit:
+    capacity: 600
+    period: 30s
+    login-failures: 5
+    login-period: 5m
+    messages: 5
+    message-period: 10m
+  notification:
+    # 新留言邮件提醒的收件人；还需要配置 spring.mail.*（见 README）
+    email: ${NOTIFY_EMAIL:}
+    from: ${NOTIFY_FROM:}

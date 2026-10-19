@@ -1,0 +1,149 @@
+# huangxin.work 个人主页
+
+前台展示 + 管理后台，一个 Spring Boot 应用搞定。后台架构源自 [jasonpyau.com](https://github.com/jasonpyau/jasonpyau.com)；前台已重新设计为深色 Bento 作品集，主要参考 [Bentofolio](https://github.com/mkhoirulwafa18/bentofolio) 的信息架构和 [Magic UI Portfolio](https://github.com/dillionverma/portfolio) 的交互方式。三个上游项目均使用 MIT 协议。
+
+- 前台 `/`：全新响应式 Bento 设计，支持明暗主题、滚动动效、动态卡片和弹窗留言；Thymeleaf 服务端渲染，内容全部来自数据库
+- 后台 `/admin`：原生 JS 单页，无需前端构建；可编辑基本信息、工作经历、项目、联系方式，查看 / 处理留言
+- 留言板：访客在主页留言，后台查看；可选邮件提醒；后台可一键关闭
+
+## 相比原项目改了什么
+
+| | 原项目 | 现在 |
+|---|---|---|
+| 后台 | 命令行 `AdminPanel.java`，每次请求带明文密码 | Web 后台，密码登录换 token，路径级统一鉴权 |
+| 页面 | 英文，Bootstrap | 深色 Bento Grid，明暗主题、项目画布、滚动动效与弹窗留言 |
+| 内容模型 | 博客 / 技能 / 多职位经历等 | 精简为：基本信息、经历、项目、联系方式、留言 |
+| 数据库 | MariaDB，需自行安装 | Docker Compose 一键起 MySQL 8.4；不用 Docker 时可用 H2 |
+| 限流 | Bucket4j + Guava | Bucket4j + Caffeine，另加登录失败、留言专用限流 |
+| 安全 | 开放 CORS | 同源 + CSP 等安全头，链接协议白名单，蜜罐防机器人 |
+
+## 用 Docker 运行（推荐）
+
+所有组件都跑在容器里，本机只需要 Docker，不依赖本机的 JDK / Maven / MySQL。
+
+| 服务 | 镜像 | 本机地址 |
+|---|---|---|
+| app | 由 `Dockerfile` 构建（容器内 Maven 打包，JRE 17 运行） | http://localhost:8080 ，后台 http://localhost:8080/admin |
+| mysql | `mysql:8.4.11`，数据在命名卷 `homepage_mysql-data` | `127.0.0.1:3307`，库 / 用户都是 `homepage` |
+| mailpit | `axllent/mailpit:v1.31.6`，本地收信箱，接住留言提醒邮件 | http://localhost:8025 |
+
+```bash
+cp .env.example .env      # 填后台密码和数据库密码
+docker compose up -d --build
+```
+
+首次启动会写入你的初始履历与项目内容，之后都在后台改。端口都只绑定 `127.0.0.1`，局域网访问不到。
+
+常用命令：
+
+```bash
+docker compose ps                 # 状态
+docker compose logs -f app        # 看应用日志
+docker compose up -d --build app  # 改完代码后重新构建并重启应用
+docker compose stop               # 停止（数据保留）
+docker compose down               # 删除容器（数据卷保留）
+docker compose down -v            # 连数据一起删除，谨慎
+```
+
+## 不用 Docker 的开发方式
+
+需要本机 JDK 17+，数据存在 `./data/` 下的 H2 文件库（已 gitignore）：
+
+```bash
+ADMIN_PASSWORD='换成你的密码' ./mvnw spring-boot:run
+```
+
+不设 `ADMIN_PASSWORD` 时会随机生成一个临时密码打印在启动日志里。
+
+## 部署到服务器
+
+服务器装好 Docker 后，同样用 `docker compose up -d --build`；`.env` 里换成正式密码，邮件提醒换成真实 SMTP（见 `.env.example`）。
+应用用 `prod` 配置运行，表结构由 Hibernate 自动创建（`ddl-auto: update`），没设 `ADMIN_PASSWORD` 会拒绝启动。
+
+不用 Docker 的话，`./mvnw -DskipTests package` 打包后：
+
+```bash
+export ADMIN_PASSWORD='足够长的密码'
+export DB_URL='jdbc:mysql://127.0.0.1:3306/homepage?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai'
+export DB_USERNAME=homepage
+export DB_PASSWORD='数据库密码'
+java -jar target/homepage-1.0.0.jar --spring.profiles.active=prod
+```
+
+建议前面挂 Nginx 并开启 HTTPS（后台登录会传输密码）：
+
+```nginx
+location / {
+    proxy_pass http://127.0.0.1:8080;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+}
+```
+
+prod 配置开启了 `server.forward-headers-strategy=native`，只信任内网代理传来的 `X-Forwarded-For`，限流按访客真实 IP 计算。
+
+## 配置项
+
+用 Docker 时在 `.env` 里配置，可用的变量和邮件示例见 `.env.example`。直接运行 jar 时用下面这些环境变量：
+
+| 环境变量 | 说明 | 默认 |
+|---|---|---|
+| `ADMIN_PASSWORD` | 后台密码 | 开发环境随机生成 |
+| `PORT` | 端口 | 8080 |
+| `DB_URL` / `DB_USERNAME` / `DB_PASSWORD` | MySQL 连接（prod） | 本机 3306 / root |
+| `NOTIFY_EMAIL` | 新留言通知到这个邮箱 | 不发送 |
+| `NOTIFY_FROM` | 发件人（没配 SMTP 用户名时用） | 空 |
+| `SPRING_MAIL_HOST` 等 | 发信 SMTP，见下 | 不配置 |
+
+新留言邮件提醒（以 QQ 邮箱为例，密码填 SMTP 授权码）：
+
+```bash
+export NOTIFY_EMAIL=you@example.com
+export SPRING_MAIL_HOST=smtp.qq.com
+export SPRING_MAIL_PORT=465
+export SPRING_MAIL_USERNAME=xxx@qq.com
+export SPRING_MAIL_PASSWORD='SMTP 授权码'
+export SPRING_MAIL_PROPERTIES_MAIL_SMTP_SSL_ENABLE=true
+```
+
+限流、登录有效期等其它参数见 `src/main/resources/application.yml` 的 `homepage.*`。
+
+## 目录结构
+
+```
+docker-compose.yml   app + mysql + mailpit 编排
+Dockerfile           多阶段构建：Maven 打包 → JRE 运行
+.env.example         Docker 环境变量模板（复制为 .env）
+src/main/java/work/huangxin/homepage
+├── auth/          后台登录、token、鉴权拦截器
+├── ratelimit/     @RateLimit 注解 + Bucket4j 限流
+├── domain/        实体：Profile / Experience / Project / ContactLink / Message
+├── repository/    Spring Data JPA
+├── service/       业务逻辑（主页数据带缓存，后台写操作自动清缓存）
+├── controller/    前台页面、留言接口；admin/ 下是后台接口
+├── config/        配置、安全头、初始数据
+└── common/        统一返回、异常处理、工具类
+src/main/resources
+├── templates/     前台 Thymeleaf 模板
+└── static/        前台 css/js，admin/ 后台单页
+```
+
+## 后台接口
+
+除登录外都需要 `Authorization: Bearer <token>`。
+
+| 接口 | 说明 |
+|---|---|
+| `POST /api/admin/login` | `{"password": "..."}` → token |
+| `GET/PUT /api/admin/profile` | 基本信息 |
+| `GET/POST /api/admin/{experiences,projects,contacts}` | 列表 / 新增 |
+| `PUT/DELETE /api/admin/{...}/{id}` | 修改 / 删除 |
+| `PUT /api/admin/{...}/order` | 排序，body 为 id 数组 |
+| `GET /api/admin/messages?page=0&size=20` | 留言分页 |
+| `PUT /api/admin/messages/{id}/read`、`DELETE /api/admin/messages/{id}` | 标记已读 / 删除 |
+| `POST /api/messages` | 前台留言（公开，限流） |
+
+## License
+
+MIT，保留原项目版权声明，见 [LICENSE](LICENSE)。

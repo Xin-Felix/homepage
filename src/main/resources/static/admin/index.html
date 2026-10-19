@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex, nofollow" />
+<title>主页管理后台</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+<link rel="stylesheet" href="/admin/admin.css" />
+<script src="/admin/admin.js" defer></script>
+</head>
+<body>
+
+<!-- 登录 -->
+<main id="login-view" class="login" hidden>
+  <form id="login-form" class="login-card">
+    <h1>主页管理后台</h1>
+    <p class="muted">登录后可以编辑主页上的所有内容</p>
+    <label for="login-password">后台密码</label>
+    <input id="login-password" name="password" type="password" autocomplete="current-password" required />
+    <button type="submit" class="btn primary block">登录</button>
+    <p id="login-error" class="form-error" role="alert"></p>
+  </form>
+</main>
+
+<!-- 后台主体 -->
+<div id="app-view" class="app" hidden>
+  <header class="topbar">
+    <div class="brand">主页后台</div>
+    <div class="top-actions">
+      <a class="btn ghost" href="/" target="_blank" rel="noopener">查看主页 ↗</a>
+      <button id="logout-btn" class="btn ghost" type="button">退出登录</button>
+    </div>
+  </header>
+  <div class="layout">
+    <nav class="sidebar" aria-label="后台导航">
+      <a class="nav-item" href="#dashboard" data-tab="dashboard">概览</a>
+      <a class="nav-item" href="#profile" data-tab="profile">基本信息</a>
+      <a class="nav-item" href="#experiences" data-tab="experiences">工作经历</a>
+      <a class="nav-item" href="#projects" data-tab="projects">开源与项目</a>
+      <a class="nav-item" href="#contacts" data-tab="contacts">联系方式</a>
+      <a class="nav-item" href="#messages" data-tab="messages">留言<span id="unread-badge" class="nav-badge" hidden></span></a>
+    </nav>
+    <main id="panel" class="panel" tabindex="-1" aria-live="polite"></main>
+  </div>
+</div>
+
+<dialog id="editor" class="editor" aria-labelledby="editor-title"></dialog>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+</body>
+</html>
