@@ -107,7 +107,11 @@ app.use('/api', async (req, res) => {
 });
 
 async function renderHome(req, res) {
-  const home = await backendJson('/api/public/home', { method: 'GET' }, req);
+  const [home, aiProjects] = await Promise.all([
+    backendJson('/api/public/home', { method: 'GET' }, req),
+    backendJson('/api/public/ai-projects', { method: 'GET' }, req),
+  ]);
+  home.aiProjects = aiProjects;
   const views = await recordPageVisit(req, home.views);
   res.render('index', { site: home, p: home.profile, views, year: new Date().getFullYear() });
 }
@@ -167,6 +171,36 @@ app.get('/notes/:slug', async (req, res, next) => {
     if (error.statusCode === 404) {
       return res.status(404).render('error', { status: 404, message: '这篇技术笔记不存在或尚未发布。' });
     }
+    next(error);
+  }
+});
+
+app.get('/ai', async (req, res, next) => {
+  try {
+    const [home, projects] = await Promise.all([
+      backendJson('/api/public/home', { method: 'GET' }, req),
+      backendJson('/api/public/ai-projects', { method: 'GET' }, req),
+    ]);
+    if (!projects.length) return next();
+    const views = await recordPageVisit(req, home.views);
+    res.render('ai', { p: home.profile, projects, views, year: new Date().getFullYear() });
+  } catch (error) { next(error); }
+});
+
+app.get('/ai/:slug', async (req, res, next) => {
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(req.params.slug)) return next();
+  try {
+    const [home, project] = await Promise.all([
+      backendJson('/api/public/home', { method: 'GET' }, req),
+      backendJson(`/api/public/ai-projects/${encodeURIComponent(req.params.slug)}`, { method: 'GET' }, req),
+    ]);
+    const views = await recordPageVisit(req, home.views);
+    res.render('ai-detail', {
+      p: home.profile, project, contentHtml: renderMarkdown(project.contentMarkdown),
+      views, year: new Date().getFullYear(),
+    });
+  } catch (error) {
+    if (error.statusCode === 404) return res.status(404).render('error', { status: 404, message: '这个 AI 项目不存在或尚未发布。' });
     next(error);
   }
 });

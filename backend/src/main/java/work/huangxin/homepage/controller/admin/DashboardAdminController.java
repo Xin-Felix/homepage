@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import lombok.RequiredArgsConstructor;
 import work.huangxin.homepage.common.ApiResponse;
+import work.huangxin.homepage.service.AiProjectService;
 import work.huangxin.homepage.service.ExperienceService;
 import work.huangxin.homepage.service.MessageService;
 import work.huangxin.homepage.service.NoteService;
@@ -20,6 +21,7 @@ public class DashboardAdminController {
     private final SiteService siteService;
     private final ExperienceService experienceService;
     private final ProjectService projectService;
+    private final AiProjectService aiProjectService;
     private final NoteService noteService;
     private final MessageService messageService;
 
@@ -31,10 +33,11 @@ public class DashboardAdminController {
                 messageService.countUnread(),
                 experienceService.count(),
                 projectService.count(),
-                noteService.count()));
+                noteService.count(),
+                aiProjectService.count()));
     }
 
     public record Dashboard(long views, long messages, long unreadMessages,
-                            long experiences, long projects, long notes) {
+                            long experiences, long projects, long notes, long aiProjects) {
     }
 }

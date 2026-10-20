@@ -137,6 +137,27 @@
       ],
       summary: (n) => ({ title: n.title, sub: `${n.published ? '已发布' : '草稿'} · /notes/${n.slug} · 阅读 ${n.readCount || 0}` }),
     },
+    'ai-projects': {
+      title: 'AI Lab',
+      desc: '没有公开项目时，前台入口和区块会自动隐藏',
+      noun: 'AI 项目',
+      path: '/api/admin/ai-projects',
+      fields: [
+        { key: 'title', label: '项目名称', required: true, max: 100 },
+        { key: 'slug', label: '详情路径', max: 100, placeholder: 'my-ai-agent' },
+        { key: 'summary', label: '一句话介绍', type: 'textarea', rows: 3, required: true, max: 500 },
+        { key: 'status', label: '项目状态', type: 'select', options: [
+          ['IDEA', '构思中'], ['BUILDING', '开发中'], ['LIVE', '已上线'], ['ARCHIVED', '已归档'],
+        ] },
+        { key: 'models', label: '模型 / 服务', max: 100, placeholder: 'Claude / GPT / 本地模型' },
+        { key: 'stack', label: '技术栈', type: 'list', placeholder: 'RAG, Agent, MCP, Spring AI' },
+        { key: 'demoUrl', label: '在线体验', type: 'url', max: 300, placeholder: 'https://…' },
+        { key: 'repoUrl', label: '代码仓库', type: 'url', max: 300, placeholder: 'https://github.com/…' },
+        { key: 'contentMarkdown', label: '项目详情（Markdown）', type: 'textarea', rows: 18, max: 100000 },
+        { key: 'visible', label: '公开发布', type: 'checkbox', default: false },
+      ],
+      summary: (p) => ({ title: p.title, sub: `${p.status} · ${p.visible ? `/ai/${p.slug}` : '未公开'}` }),
+    },
     contacts: {
       title: '联系方式',
       desc: '主页「联系我」里的条目',
@@ -165,6 +186,18 @@
         const input = h('input', { type: 'checkbox', id, name: f.key });
         input.checked = value === undefined || value === null ? !!f.default : !!value;
         frag.append(h('div', { class: 'field check', 'data-field': f.key }, input, h('label', { for: id }, f.label), error));
+        continue;
+      }
+
+      if (f.type === 'select') {
+        const select = h('select', { id, name: f.key, required: !!f.required });
+        for (const [optionValue, optionLabel] of f.options || []) {
+          const option = h('option', { value: optionValue }, optionLabel);
+          if (optionValue === value) option.selected = true;
+          select.append(option);
+        }
+        frag.append(h('div', { class: 'field', 'data-field': f.key },
+          h('label', { for: id }, f.label), select, error));
         continue;
       }
 
@@ -236,6 +269,7 @@
     experiences: () => renderList('experiences'),
     projects: () => renderList('projects'),
     notes: () => renderList('notes'),
+    'ai-projects': () => renderList('ai-projects'),
     contacts: () => renderList('contacts'),
     messages: () => renderMessages(state.messagePage),
   };
@@ -311,7 +345,8 @@
         stat(`${analytics.days} 天请求`, analytics.requests, '#visits'),
         stat('刷新请求', analytics.refreshes, '#visits'),
         stat('未读留言', d.unreadMessages, '#messages', d.unreadMessages > 0),
-        stat('技术笔记', d.notes, '#notes')),
+        stat('技术笔记', d.notes, '#notes'),
+        stat('AI 项目', d.aiProjects, '#ai-projects')),
       h('div', { class: 'analytics-grid' },
         analyticsTrend(analytics.daily),
         analyticsHours(analytics.hourly),
@@ -450,7 +485,7 @@
     const cfg = RESOURCES[key];
     const dialog = $('#editor');
     const isNew = !item;
-    const isMarkdownEditor = key === 'projects' || key === 'notes';
+    const isMarkdownEditor = key === 'projects' || key === 'notes' || key === 'ai-projects';
     dialog.classList.toggle('editor-wide', isMarkdownEditor);
 
     const submit = h('button', { type: 'submit', class: 'btn primary' }, '保存');

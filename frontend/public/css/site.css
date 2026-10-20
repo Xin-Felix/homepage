@@ -596,3 +596,21 @@ button { color: inherit; }
   .note-card h2 { font-size: 27px; }
   .note-detail .detail-hero h1 { font-size: 43px; }
 }
+
+/* ======================================================== AI Lab */
+.ai-home-grid, .ai-list { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 14px; }
+.ai-home-card, .ai-list-card { min-height: 440px; padding: 28px; display: flex; flex-direction: column; color: var(--ink); border: 1px solid var(--line); border-radius: var(--radius); background: var(--card); text-decoration: none; overflow: hidden; }
+.ai-home-card:nth-child(3n+1), .ai-list-card:nth-child(3n+1) { background: color-mix(in srgb, var(--violet) 20%, var(--card)); }
+.ai-card-top { display: flex; justify-content: space-between; gap: 15px; font: 700 9px ui-monospace, monospace; letter-spacing: .11em; }
+.ai-card-top b { color: var(--lime); }
+.ai-node { position: relative; width: 170px; aspect-ratio: 1; margin: 35px auto; display: grid; place-items: center; border: 1px solid var(--line-strong); border-radius: 50%; }
+.ai-node i { position: absolute; inset: 18%; border: 1px dashed var(--line-strong); border-radius: 50%; animation: orbit-spin 12s linear infinite; }
+.ai-node i:nth-child(2) { inset: 36%; border-style: solid; animation-direction: reverse; }
+.ai-node strong { z-index: 2; color: var(--lime); font: 800 18px ui-monospace, monospace; }
+.ai-home-card h3, .ai-list-card h2 { margin-top: auto; font-size: clamp(28px,3vw,44px); line-height: 1.05; letter-spacing: -.045em; }
+.ai-home-card p, .ai-list-card p { color: var(--muted); margin-top: 13px; line-height: 1.75; font-size: 13px; }
+.ai-all-link { display: inline-flex; margin-top: 24px; color: var(--lime); text-decoration: none; font-weight: 700; }
+.ai-list-hero { padding-bottom: 70px; }
+.ai-list { margin-top: 20px; }
+.ai-detail-hero { border-color: color-mix(in srgb, var(--violet) 45%, var(--line)); }
+@media(max-width:760px){.ai-home-grid,.ai-list{grid-template-columns:1fr}.ai-home-card,.ai-list-card{min-height:400px;padding:22px}.ai-node{width:145px}}
