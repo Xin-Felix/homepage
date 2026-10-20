@@ -12,6 +12,7 @@ import org.springframework.boot.context.properties.bind.DefaultValue;
 public record HomepageProperties(
         @DefaultValue Admin admin,
         @DefaultValue RateLimit rateLimit,
+        @DefaultValue Views views,
         @DefaultValue Notification notification) {
 
     /**
@@ -36,6 +37,15 @@ public record HomepageProperties(
             @DefaultValue("5m") Duration loginPeriod,
             @DefaultValue("5") long messages,
             @DefaultValue("10m") Duration messagePeriod) {
+    }
+
+    /**
+     * @param uniqueWindow  同一 IP 再次计数前需要等待的时间
+     * @param maxTrackedIps 内存中最多保留的 IP 摘要数量
+     */
+    public record Views(
+            @DefaultValue("24h") Duration uniqueWindow,
+            @DefaultValue("100000") long maxTrackedIps) {
     }
 
     /**

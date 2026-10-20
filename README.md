@@ -98,6 +98,10 @@ prod 配置开启了 `server.forward-headers-strategy=native`，只信任内网�
 | `MAIL_AUTH` | 是否启用 SMTP 认证 | true |
 | `MAIL_SSL` | 直接 SSL（常见端口 465） | false |
 | `MAIL_STARTTLS` | STARTTLS（常见端口 587） | false |
+| `VISITOR_UNIQUE_WINDOW` | 同一 IP 再次计数前的等待时间 | 24h |
+| `VISITOR_MAX_TRACKED_IPS` | 内存中最多保留的 IP 摘要数量 | 100000 |
+
+独立访问统计默认对同一 IP 去重 24 小时；应用只在内存保存 SHA-256 摘要，不保存明文 IP。单实例容器重启后去重窗口会重新开始。
 
 QQ 邮箱通常使用 `MAIL_PORT=465`、`MAIL_SSL=true`；Gmail 等 STARTTLS 服务通常使用 `MAIL_PORT=587`、`MAIL_STARTTLS=true`。修改 `.env` 后执行：
 

@@ -37,6 +37,10 @@ homepage:
     login-period: 5m
     messages: 5
     message-period: 10m
+  views:
+    # 同一 IP 在该窗口内只计一次；可通过 VISITOR_UNIQUE_WINDOW 调整（如 30m、24h、7d）
+    unique-window: ${VISITOR_UNIQUE_WINDOW:24h}
+    max-tracked-ips: ${VISITOR_MAX_TRACKED_IPS:100000}
   notification:
     # 新留言邮件提醒的收件人；还需要配置 spring.mail.*（见 README）
     email: ${NOTIFY_EMAIL:}

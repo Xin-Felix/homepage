@@ -4,7 +4,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import work.huangxin.homepage.common.ClientIp;
 import work.huangxin.homepage.service.SiteService;
 
 /**
@@ -17,8 +19,8 @@ public class HomeController {
     private final SiteService siteService;
 
     @GetMapping({"/", "/index", "/index.html"})
-    public String home(Model model) {
-        long views = siteService.recordView();
+    public String home(HttpServletRequest request, Model model) {
+        long views = siteService.recordView(ClientIp.of(request));
         model.addAttribute("site", siteService.getSiteData());
         model.addAttribute("views", views);
         return "index";

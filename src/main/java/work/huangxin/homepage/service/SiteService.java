@@ -8,6 +8,11 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+
+import work.huangxin.homepage.common.ClientIp;
+import work.huangxin.homepage.config.HomepageProperties;
 import work.huangxin.homepage.domain.ContactLink;
 import work.huangxin.homepage.domain.Experience;
 import work.huangxin.homepage.domain.Profile;
@@ -18,7 +23,7 @@ import work.huangxin.homepage.repository.ProfileRepository;
 import work.huangxin.homepage.repository.ProjectRepository;
 
 /**
- * 主页数据：读取走缓存，后台任意写操作后清缓存。
+ * 主页数据：内容读取走缓存，访问量单独从数据库读取。
  */
 @Service
 public class SiteService {
@@ -30,14 +35,25 @@ public class SiteService {
     private final ProjectRepository projectRepository;
     private final ContactLinkRepository contactLinkRepository;
 
+    /**
+     * IP 只以 SHA-256 摘要作为缓存键，不保存明文。
+     * 当前部署是单应用实例；容器重启后去重窗口会重新开始。
+     */
+    private final Cache<String, Boolean> recentVisitors;
+
     public SiteService(ProfileRepository profileRepository,
                        ExperienceRepository experienceRepository,
                        ProjectRepository projectRepository,
-                       ContactLinkRepository contactLinkRepository) {
+                       ContactLinkRepository contactLinkRepository,
+                       HomepageProperties properties) {
         this.profileRepository = profileRepository;
         this.experienceRepository = experienceRepository;
         this.projectRepository = projectRepository;
         this.contactLinkRepository = contactLinkRepository;
+        this.recentVisitors = Caffeine.newBuilder()
+                .expireAfterWrite(properties.views().uniqueWindow())
+                .maximumSize(properties.views().maxTrackedIps())
+                .build();
     }
 
     @Cacheable(cacheNames = CACHE, key = "'home'")
@@ -64,14 +80,23 @@ public class SiteService {
     }
 
     /**
-     * 记录一次主页 PV，并返回数据库中的最新累计值。
-     * 访问量不放进主页内容缓存，避免页面长期显示旧数字。
+     * 同一 IP 在配置窗口内只计一次，并返回数据库中的最新累计值。
+     * 数据库更新失败时会撤销本次内存标记，允许下次请求重试。
      */
     @Transactional
-    public long recordView() {
-        int updatedRows = profileRepository.incrementViews(Profile.SINGLETON_ID);
-        if (updatedRows != 1) {
-            throw new IllegalStateException("主页资料不存在，无法记录访问量");
+    public long recordView(String ip) {
+        String visitorKey = ClientIp.sha256Hex(ip == null ? "unknown" : ip);
+        boolean firstVisitInWindow = recentVisitors.asMap().putIfAbsent(visitorKey, Boolean.TRUE) == null;
+        if (firstVisitInWindow) {
+            try {
+                int updatedRows = profileRepository.incrementViews(Profile.SINGLETON_ID);
+                if (updatedRows != 1) {
+                    throw new IllegalStateException("主页资料不存在，无法记录访问量");
+                }
+            } catch (RuntimeException e) {
+                recentVisitors.invalidate(visitorKey);
+                throw e;
+            }
         }
         return getViewCount();
     }

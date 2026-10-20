@@ -38,6 +38,9 @@ services:
       DB_URL: jdbc:mysql://mysql:3306/homepage?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
       DB_USERNAME: homepage
       DB_PASSWORD: ${MYSQL_PASSWORD}
+      # 独立访问统计：同一 IP 在该窗口内只计一次
+      VISITOR_UNIQUE_WINDOW: ${VISITOR_UNIQUE_WINDOW:-24h}
+      VISITOR_MAX_TRACKED_IPS: ${VISITOR_MAX_TRACKED_IPS:-100000}
       # 真实 SMTP 邮件提醒；不配置 NOTIFY_EMAIL / MAIL_HOST 时不会发送邮件
       NOTIFY_EMAIL: ${NOTIFY_EMAIL:-}
       NOTIFY_FROM: ${NOTIFY_FROM:-}

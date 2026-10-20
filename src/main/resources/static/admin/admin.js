@@ -274,12 +274,12 @@
     return h('section', {},
       panelHead('概览', '主页的整体情况'),
       h('div', { class: 'stats' },
-        stat('主页访问', d.views, '/', false),
+        stat('独立访问', d.views, '/', false),
         stat('未读留言', d.unreadMessages, '#messages', d.unreadMessages > 0),
         stat('全部留言', d.messages, '#messages'),
         stat('工作经历', d.experiences, '#experiences'),
         stat('项目', d.projects, '#projects')),
-      h('p', { class: 'muted' }, '统计主页访问次数，每次打开或刷新主页都会计数。'));
+      h('p', { class: 'muted' }, '独立访问按 IP 去重，同一 IP 在 24 小时内只计一次。'));
   }
 
   // ---------------------------------------------------------------- 基本信息
