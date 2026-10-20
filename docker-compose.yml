@@ -21,7 +21,7 @@ services:
       timeout: 5s
       retries: 30
       start_period: 30s
-    networks: [data]
+    networks: [data, db-access]
 
   backend:
     build: ./backend
@@ -81,3 +81,5 @@ networks:
   edge:
   data:
     internal: true
+  db-access:
+    # 仅 MySQL 使用，使宿主机 127.0.0.1:3307 可用于本地数据库管理工具。

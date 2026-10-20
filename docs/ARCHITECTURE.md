@@ -15,6 +15,7 @@ flowchart LR
 
 - `edge`：frontend 与 backend；
 - `data`：backend 与 MySQL，标记为 internal；
+- `db-access`：仅 MySQL 使用，用于宿主机 `127.0.0.1:3307` 管理连接；
 - frontend 不持有数据库、管理员、SMTP、TOTP 或访问指纹密钥。
 
 ## 页面请求
