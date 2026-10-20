@@ -1,6 +1,7 @@
 package work.huangxin.homepage.repository;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -38,6 +39,8 @@ public interface VisitLogRepository extends JpaRepository<VisitLog, Long> {
               @Param("referer") String referer);
 
     Page<VisitLog> findAllByOrderByIdDesc(Pageable pageable);
+
+    List<VisitLog> findAllByFirstVisitedAtGreaterThanEqualOrderByFirstVisitedAtAsc(LocalDateTime threshold);
 
     long deleteByLastVisitedAtBefore(LocalDateTime threshold);
 }

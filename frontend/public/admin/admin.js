@@ -226,7 +226,7 @@
 
   // ---------------------------------------------------------------- 路由
 
-  const state = { visitPage: 0, messagePage: 0 };
+  const state = { analyticsDays: 30, visitPage: 0, messagePage: 0 };
   let renderSeq = 0;
 
   const TABS = {
@@ -290,20 +290,70 @@
   // ---------------------------------------------------------------- 概览
 
   async function renderDashboard() {
-    const d = await api('GET', '/api/admin/dashboard');
+    const [d, analytics] = await Promise.all([
+      api('GET', '/api/admin/dashboard'),
+      api('GET', `/api/admin/analytics?days=${state.analyticsDays}`),
+    ]);
     const stat = (label, value, href, highlight) =>
       h('a', { class: 'stat' + (highlight ? ' highlight' : ''), href },
         h('div', { class: 'stat-value' }, value), h('div', { class: 'stat-label' }, label));
+    const ranges = h('div', { class: 'range-switch', 'aria-label': '统计时间范围' },
+      ...[7, 30, 90].map((days) => h('button', {
+        type: 'button', class: days === state.analyticsDays ? 'is-active' : '',
+        onclick: () => { state.analyticsDays = days; show(renderDashboard); },
+      }, `${days} 天`)));
+
     return h('section', {},
-      panelHead('概览', '主页的整体情况'),
+      panelHead('概览', '主页数据与访问趋势', ranges),
       h('div', { class: 'stats' },
-        stat('独立访问', d.views, '#visits', false),
+        stat('累计独立访问', d.views, '#visits', false),
+        stat(`${analytics.days} 天独立访问`, analytics.uniqueVisitors, '#visits', true),
+        stat(`${analytics.days} 天请求`, analytics.requests, '#visits'),
+        stat('刷新请求', analytics.refreshes, '#visits'),
         stat('未读留言', d.unreadMessages, '#messages', d.unreadMessages > 0),
-        stat('全部留言', d.messages, '#messages'),
-        stat('工作经历', d.experiences, '#experiences'),
-        stat('项目', d.projects, '#projects'),
         stat('技术笔记', d.notes, '#notes')),
-      h('p', { class: 'muted' }, '独立访问按 IP 去重，同一 IP 在 24 小时内只计一次。'));
+      h('div', { class: 'analytics-grid' },
+        analyticsTrend(analytics.daily),
+        analyticsHours(analytics.hourly),
+        analyticsRank('访问来源', analytics.sources),
+        analyticsRank('热门页面', analytics.paths),
+        analyticsRank('浏览器', analytics.browsers),
+        analyticsRank('设备', analytics.devices)),
+      h('p', { class: 'muted analytics-note' }, '独立访问按 IP 窗口去重；图表只使用脱敏、最小化的自建日志。'));
+  }
+
+  function analyticsTrend(points) {
+    const max = Math.max(1, ...points.map((point) => point.uniqueVisitors));
+    return h('article', { class: 'analytics-card analytics-wide' },
+      h('h3', {}, '独立访问趋势'),
+      h('div', { class: 'trend-chart' }, ...points.map((point, index) => {
+        const height = Math.max(3, Math.round(point.uniqueVisitors / max * 100));
+        const showLabel = points.length <= 7 || index === 0 || index === points.length - 1 || index % 5 === 0;
+        return h('div', { class: 'trend-column', title: `${point.date}：${point.uniqueVisitors} 位 / ${point.requests} 次请求` },
+          h('span', { class: 'trend-value' }, point.uniqueVisitors || ''),
+          h('i', { style: `height:${height}%` }),
+          h('small', {}, showLabel ? point.date.slice(5) : ''));
+      })));
+  }
+
+  function analyticsHours(points) {
+    const max = Math.max(1, ...points.map((point) => point.visitors));
+    return h('article', { class: 'analytics-card' },
+      h('h3', {}, '首次访问时段'),
+      h('div', { class: 'hour-grid' }, ...points.map((point) => {
+        const level = point.visitors ? Math.max(.18, point.visitors / max) : .05;
+        return h('div', { title: `${String(point.hour).padStart(2, '0')}:00 · ${point.visitors} 位` },
+          h('i', { style: `opacity:${level}` }), h('small', {}, point.hour % 6 === 0 ? String(point.hour).padStart(2, '0') : ''));
+      })));
+  }
+
+  function analyticsRank(title, items) {
+    const max = Math.max(1, ...items.map((item) => item.value));
+    return h('article', { class: 'analytics-card' }, h('h3', {}, title),
+      items.length ? h('ol', { class: 'rank-list' }, ...items.map((item) => h('li', {},
+        h('div', {}, h('span', {}, item.name), h('b', {}, item.value)),
+        h('i', { style: `width:${Math.max(4, Math.round(item.value / max * 100))}%` }))))
+        : h('p', { class: 'empty analytics-empty' }, '暂无数据'));
   }
 
   // ---------------------------------------------------------------- 基本信息

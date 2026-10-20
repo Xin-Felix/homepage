@@ -16,7 +16,7 @@
 - 基本信息、经历、项目、联系方式后台管理；
 - 项目案例详情页、Markdown 编辑与安全预览；
 - 技术笔记的草稿/发布、标签、Markdown 和阅读量；
-- 24 小时 IP 去重访问统计与访问日志；
+- 24 小时 IP 去重访问统计、访问日志与 7/30/90 天图表看板；
 - 留言、限流、蜜罐反机器人和可选 SMTP 通知；
 - 前后端均设置 CSP、安全响应头和独立健康检查。
 
@@ -72,7 +72,7 @@ homepage/
 └── .env.example
 ```
 
-更详细的边界与请求链路见 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)，部署步骤见 [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)，内容编辑说明见 [docs/CONTENT.md](docs/CONTENT.md)。
+更详细的边界与请求链路见 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)，部署步骤见 [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)，内容编辑说明见 [docs/CONTENT.md](docs/CONTENT.md)，统计口径见 [docs/ANALYTICS.md](docs/ANALYTICS.md)。
 
 ## 环境变量
 
