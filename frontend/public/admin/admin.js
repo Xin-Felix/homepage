@@ -46,7 +46,7 @@
       throw new Error('网络异常，请检查服务是否在运行');
     }
     const json = await res.json().catch(() => null);
-    if (res.status === 401 && path !== '/api/admin/login') {
+    if (res.status === 401 && path !== '/api/admin/login' && json?.reason === '未登录或登录已过期') {
       setToken(null);
       showLogin('登录已过期，请重新登录');
       throw new Error('登录已过期，请重新登录');
@@ -261,6 +261,16 @@
 
   const state = { analyticsDays: 30, visitPage: 0, messagePage: 0 };
   let renderSeq = 0;
+  let totpExpiryTimer;
+
+  function clearTotpSecrets(clearPanel = false) {
+    clearTimeout(totpExpiryTimer);
+    totpExpiryTimer = undefined;
+    $$('.totp-qr').forEach((image) => { image.removeAttribute('src'); });
+    $$('.manual-key').forEach((key) => { key.textContent = ''; });
+    $$('.totp-setup input').forEach((input) => { input.value = ''; });
+    if (clearPanel) $('#panel').replaceChildren();
+  }
 
   const TABS = {
     dashboard: renderDashboard,
@@ -272,6 +282,7 @@
     'ai-projects': () => renderList('ai-projects'),
     contacts: () => renderList('contacts'),
     messages: () => renderMessages(state.messagePage),
+    security: renderSecurity,
   };
 
   function currentTab() {
@@ -304,6 +315,7 @@
 
   function route(options) {
     const tab = currentTab();
+    if (tab !== 'security') clearTotpSecrets();
     $$('.nav-item').forEach((a) => {
       if (a.dataset.tab === tab) a.setAttribute('aria-current', 'page');
       else a.removeAttribute('aria-current');
@@ -638,15 +650,103 @@
     return h('section', {}, panelHead('留言', `共 ${data.total} 条`), list, pager);
   }
 
+  // ---------------------------------------------------------------- 安全设置
+
+  async function renderSecurity() {
+    const status = await api('GET', '/api/admin/totp/status');
+    const section = h('section', {}, panelHead('安全设置', 'TOTP 动态验证码和后台会话安全'));
+    const card = h('div', { class: 'card security-card' },
+      h('div', { class: 'security-status' },
+        h('div', {}, h('h3', {}, 'Authenticator 动态验证码'),
+          h('p', { class: 'muted' }, status.enabled ? '已启用：登录必须同时输入 6 位动态验证码。' : '未启用：当前只验证管理员账号和密码。')),
+        h('span', { class: 'badge' + (status.enabled ? ' security-on' : '') }, status.enabled ? '已启用' : '未启用')));
+
+    if (!status.enabled) {
+      if (status.setupPending) card.append(h('p', { class: 'security-warning' }, '存在未确认的绑定，重新生成会替换它。'));
+      const password = h('input', { type: 'password', autocomplete: 'current-password', placeholder: '再次输入后台密码' });
+      const setupButton = h('button', { type: 'button', class: 'btn primary' }, '生成绑定二维码');
+      const setupForm = h('div', { class: 'security-action' }, password, setupButton);
+      card.append(setupForm);
+
+      setupButton.addEventListener('click', async () => {
+        setupButton.disabled = true;
+        try {
+          const setup = await api('POST', '/api/admin/totp/setup', { password: password.value });
+          password.value = '';
+          const code = h('input', { type: 'text', inputmode: 'numeric', autocomplete: 'one-time-code', maxlength: 6, placeholder: '输入 App 中的 6 位验证码' });
+          const confirmButton = h('button', { type: 'button', class: 'btn primary' }, '确认并启用');
+          const qr = h('img', { class: 'totp-qr', src: setup.qrDataUrl, alt: 'TOTP 绑定二维码' });
+          const setupPanel = h('div', { class: 'totp-setup' },
+            h('h3', {}, '用 Authenticator 扫描二维码'),
+            h('p', { class: 'muted' }, '二维码约 10 分钟有效。无法扫码时手工输入下方密钥。'),
+            qr,
+            h('code', { class: 'manual-key' }, setup.manualKey),
+            h('div', { class: 'security-action' }, code, confirmButton));
+          setupForm.replaceWith(setupPanel);
+          const expiresAt = new Date(setup.expiresAt).getTime();
+          const delay = Number.isFinite(expiresAt) ? Math.max(1_000, expiresAt - Date.now()) : 10 * 60_000;
+          clearTimeout(totpExpiryTimer);
+          totpExpiryTimer = setTimeout(() => {
+            clearTotpSecrets();
+            setupPanel.replaceChildren(h('p', { class: 'security-warning' }, '绑定已过期，请重新进入安全设置生成二维码。'));
+          }, Math.min(delay, 10 * 60_000));
+          confirmButton.addEventListener('click', async () => {
+            confirmButton.disabled = true;
+            try {
+              await api('POST', '/api/admin/totp/confirm', { code: code.value.trim() });
+              clearTotpSecrets(true);
+              setToken(null);
+              history.replaceState(null, '', location.pathname);
+              showLogin('TOTP 已启用，请使用账号、密码和动态验证码重新登录');
+            } catch (err) {
+              toast(err.message, 'error');
+              confirmButton.disabled = false;
+            }
+          });
+        } catch (err) {
+          toast(err.message, 'error');
+          setupButton.disabled = false;
+        }
+      });
+    } else {
+      const password = h('input', { type: 'password', autocomplete: 'current-password', placeholder: '当前后台密码' });
+      const code = h('input', { type: 'text', inputmode: 'numeric', autocomplete: 'one-time-code', maxlength: 6, placeholder: '当前 6 位动态验证码' });
+      const disableButton = h('button', { type: 'button', class: 'btn danger' }, '停用 TOTP');
+      card.append(h('p', { class: 'security-warning' }, '停用后后台将退回账号 + 密码登录，并撤销所有现有会话。'),
+        h('div', { class: 'security-action security-disable' }, password, code, disableButton));
+      disableButton.addEventListener('click', async () => {
+        if (!confirm('确定停用 TOTP 双因素认证吗？')) return;
+        disableButton.disabled = true;
+        try {
+          await api('POST', '/api/admin/totp/disable', { password: password.value, code: code.value.trim() });
+          clearTotpSecrets(true);
+          setToken(null);
+          history.replaceState(null, '', location.pathname);
+          showLogin('TOTP 已停用，请重新登录');
+        } catch (err) {
+          toast(err.message, 'error');
+          disableButton.disabled = false;
+        }
+      });
+    }
+
+    section.append(card, h('p', { class: 'muted security-note' },
+      '请使用 Google Authenticator、Microsoft Authenticator、1Password 等兼容 TOTP 的应用。服务器时间必须保持同步。'));
+    return section;
+  }
+
   // ---------------------------------------------------------------- 登录 / 退出
 
   function showLogin(message) {
+    clearTotpSecrets(true);
     $('#app-view').hidden = true;
     $('#login-view').hidden = false;
     $('#login-error').textContent = message || '';
     const username = $('#login-username');
     const password = $('#login-password');
+    const totp = $('#login-totp');
     password.value = '';
+    totp.value = '';
     if (username.value.trim()) password.focus();
     else username.focus();
   }
@@ -662,10 +762,11 @@
     const button = $('button[type="submit"]', event.currentTarget);
     const username = $('#login-username').value.trim();
     const password = $('#login-password').value;
+    const totpCode = $('#login-totp').value.trim();
     button.disabled = true;
     $('#login-error').textContent = '';
     try {
-      const data = await api('POST', '/api/admin/login', { username, password });
+      const data = await api('POST', '/api/admin/login', { username, password, totpCode });
       setToken(data.token);
       showApp();
     } catch (err) {

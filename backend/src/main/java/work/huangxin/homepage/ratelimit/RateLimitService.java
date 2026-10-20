@@ -51,27 +51,32 @@ public class RateLimitService {
      * 成功会清除失败状态；失败达到上限后，从该次失败起锁定完整周期。
      */
     public <T> Optional<T> executeLoginAttempt(String ip, Supplier<Optional<T>> credentialVerifier) {
-        LoginFailureState state = loginFailures.get(ip, key -> new LoginFailureState());
+        return executeGuardedAttempt("ip:" + ip, credentialVerifier, "登录失败次数过多");
+    }
+
+    /** TOTP 设置/确认/停用共享账户级锁定，防止拿到旧 token 后高速猜测密码或验证码。 */
+    public <T> Optional<T> executeStepUpAttempt(Supplier<Optional<T>> verifier) {
+        return executeGuardedAttempt("admin-step-up", verifier, "安全验证失败次数过多");
+    }
+
+    private <T> Optional<T> executeGuardedAttempt(
+            String key, Supplier<Optional<T>> verifier, String lockedMessage) {
+        LoginFailureState state = loginFailures.get(key, ignored -> new LoginFailureState());
         synchronized (state) {
             Instant now = Instant.now();
             if (state.lockedUntil != null && state.lockedUntil.isAfter(now)) {
                 long waitMillis = Duration.between(now, state.lockedUntil).toMillis();
-                throw new RateLimitException("登录失败次数过多", Math.max(1, waitMillis));
+                throw new RateLimitException(lockedMessage, Math.max(1, waitMillis));
             }
-            if (state.lockedUntil != null) {
-                state.reset();
-            }
+            if (state.lockedUntil != null) state.reset();
 
-            Optional<T> result = credentialVerifier.get();
+            Optional<T> result = verifier.get();
             if (result.isPresent()) {
                 state.reset();
                 return result;
             }
-
             state.failures++;
-            if (state.failures >= maxLoginFailures) {
-                state.lockedUntil = now.plus(loginLockDuration);
-            }
+            if (state.failures >= maxLoginFailures) state.lockedUntil = now.plus(loginLockDuration);
             return Optional.empty();
         }
     }

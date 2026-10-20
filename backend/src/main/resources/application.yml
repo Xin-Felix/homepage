@@ -49,6 +49,14 @@ homepage:
     log-retention: ${VISITOR_LOG_RETENTION:90d}
     # 对 IP 指纹加盐；生产环境必须配置独立随机值
     hash-salt: ${VISITOR_HASH_SALT:}
+  totp:
+    # 生产环境必须使用独立 32 字节密钥（64 位 hex 或 Base64），仅用于加密 TOTP secret
+    encryption-key: ${TOTP_ENCRYPTION_KEY:}
+    key-id: ${TOTP_KEY_ID:v1}
+    issuer: ${TOTP_ISSUER:huangxin.work}
+    pending-ttl: 10m
+    period: 30s
+    allowed-window: 1
   notification:
     # 新留言邮件提醒的收件人；还需要配置 spring.mail.*（见 README）
     email: ${NOTIFY_EMAIL:}

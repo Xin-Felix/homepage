@@ -6,7 +6,8 @@
 git clone -b feat/personal-homepage https://github.com/Xin-Felix/homepage.git
 cd homepage
 cp .env.example .env
-openssl rand -hex 32   # 可用于 VISITOR_HASH_SALT
+openssl rand -hex 32   # VISITOR_HASH_SALT
+openssl rand -hex 32   # TOTP_ENCRYPTION_KEY
 # 编辑 .env
 docker compose up -d --build
 ```

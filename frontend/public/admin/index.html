@@ -20,6 +20,8 @@
     <input id="login-username" name="username" type="text" autocomplete="username" maxlength="100" required />
     <label for="login-password">管理员密码</label>
     <input id="login-password" name="password" type="password" autocomplete="current-password" required />
+    <label for="login-totp">动态验证码 <span class="muted">（启用 TOTP 后必填）</span></label>
+    <input id="login-totp" name="totpCode" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" placeholder="6 位验证码" />
     <button type="submit" class="btn primary block">登录</button>
     <p id="login-error" class="form-error" role="alert"></p>
   </form>
@@ -45,6 +47,7 @@
       <a class="nav-item" href="#ai-projects" data-tab="ai-projects">AI Lab</a>
       <a class="nav-item" href="#contacts" data-tab="contacts">联系方式</a>
       <a class="nav-item" href="#messages" data-tab="messages">留言<span id="unread-badge" class="nav-badge" hidden></span></a>
+      <a class="nav-item" href="#security" data-tab="security">安全设置</a>
     </nav>
     <main id="panel" class="panel" tabindex="-1" aria-live="polite"></main>
   </div>

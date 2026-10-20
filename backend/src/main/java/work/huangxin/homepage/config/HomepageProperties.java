@@ -13,6 +13,7 @@ public record HomepageProperties(
         @DefaultValue Admin admin,
         @DefaultValue RateLimit rateLimit,
         @DefaultValue Views views,
+        @DefaultValue Totp totp,
         @DefaultValue Notification notification) {
 
     /**
@@ -52,6 +53,16 @@ public record HomepageProperties(
             @DefaultValue("24h") Duration uniqueWindow,
             String hashSalt,
             @DefaultValue("90d") Duration logRetention) {
+    }
+
+    /** TOTP 双因素认证配置。 */
+    public record Totp(
+            String encryptionKey,
+            @DefaultValue("v1") String keyId,
+            @DefaultValue("huangxin.work") String issuer,
+            @DefaultValue("10m") Duration pendingTtl,
+            @DefaultValue("30s") Duration period,
+            @DefaultValue("1") int allowedWindow) {
     }
 
     /**

@@ -9,9 +9,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import work.huangxin.homepage.auth.AdminAuthService;
 import work.huangxin.homepage.auth.AdminAuthService.LoginResult;
@@ -29,15 +26,18 @@ public class AdminAuthController {
     private final AdminAuthService adminAuthService;
     private final RateLimitService rateLimitService;
 
-    /** 登录接口不经过鉴权拦截器；同一 IP 连续失败过多会被固定窗口锁定。 */
+    /**
+     * 所有可解析登录请求都进入同一个 IP 原子失败计数区；空值、超长值和错误 TOTP
+     * 与普通错误凭据具有相同的 401 行为，不能绕过爆破锁定。
+     */
     @PostMapping("/login")
     @RateLimit(RateLimit.ADMIN)
-    public ApiResponse<LoginResult> login(@Valid @RequestBody LoginRequest body, HttpServletRequest request) {
+    public ApiResponse<LoginResult> login(@RequestBody LoginRequest body, HttpServletRequest request) {
         String ip = ClientIp.of(request);
         var result = rateLimitService.executeLoginAttempt(ip,
-                () -> adminAuthService.login(body.username(), body.password()));
+                () -> adminAuthService.login(body.username(), body.password(), body.totpCode()));
         return result.map(ApiResponse::ok)
-                .orElseThrow(() -> new UnauthorizedException("账号或密码错误"));
+                .orElseThrow(() -> new UnauthorizedException("账号、密码或动态验证码错误"));
     }
 
     @PostMapping("/logout")
@@ -46,19 +46,10 @@ public class AdminAuthController {
         return ApiResponse.ok();
     }
 
-    /** 前端用来检查本地 token 是否仍然有效。 */
     @GetMapping("/me")
     public ApiResponse<Void> me() {
         return ApiResponse.ok();
     }
 
-    public record LoginRequest(
-            @NotBlank(message = "请输入账号")
-            @Size(max = 100, message = "账号过长")
-            String username,
-
-            @NotBlank(message = "请输入密码")
-            @Size(max = 200, message = "密码过长")
-            String password) {
-    }
+    public record LoginRequest(String username, String password, String totpCode) {}
 }

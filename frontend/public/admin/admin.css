@@ -53,6 +53,21 @@ a { color: var(--accent); }
 .login-card input { margin-bottom: 8px; }
 .form-error { color: var(--danger); min-height: 1.6em; font-size: 13px; }
 
+/* TOTP 安全设置 */
+.security-card { max-width: 760px; }
+.security-status { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--line); }
+.security-status h3 { font-size: 16px; }
+.security-status p { margin-top: 4px; }
+.badge.security-on { color: var(--ok); background: #dcfce7; }
+.security-action { display: flex; align-items: center; gap: 10px; margin-top: 20px; }
+.security-action input { max-width: 330px; }
+.security-warning { margin-top: 18px; padding: 10px 12px; color: #92400e; border-radius: 8px; background: #fffbeb; font-size: 13px; }
+.totp-setup { margin-top: 24px; padding-top: 22px; border-top: 1px solid var(--line); }
+.totp-setup > p { margin: 6px 0 18px; }
+.totp-qr { width: 240px; max-width: 100%; display: block; border: 1px solid var(--line); border-radius: 12px; image-rendering: pixelated; }
+.manual-key { display: inline-block; max-width: 100%; margin-top: 12px; padding: 9px 12px; overflow-wrap: anywhere; border-radius: 8px; background: var(--soft); font-size: 13px; user-select: all; }
+.security-note { max-width: 760px; margin-top: 14px; }
+
 /* 布局 */
 .topbar {
   position: sticky; top: 0; z-index: 5; height: 56px; padding: 0 20px;
@@ -217,6 +232,8 @@ textarea { resize: vertical; line-height: 1.7; }
   .visit-grid { grid-template-columns: 1fr; gap: 10px; }
   .visit-grid .visit-wide { grid-column: auto; }
   .top-actions .btn { padding: 8px 10px; }
+  .security-status, .security-action { align-items: stretch; flex-direction: column; }
+  .security-action input { max-width: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {

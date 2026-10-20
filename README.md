@@ -12,7 +12,7 @@
 ## 当前能力
 
 - 深色 Bento 响应式主页与明暗主题；
-- 管理员账号 + 密码、Bearer token、IP 登录失败锁定；
+- 管理员账号 + 密码、Bearer token、IP 登录失败锁定与可选 TOTP；
 - 基本信息、经历、项目、联系方式后台管理；
 - 项目案例详情页、Markdown 编辑与安全预览；
 - 技术笔记的草稿/发布、标签、Markdown 和阅读量；
@@ -73,7 +73,7 @@ homepage/
 └── .env.example
 ```
 
-更详细的边界与请求链路见 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)，部署步骤见 [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)，内容编辑说明见 [docs/CONTENT.md](docs/CONTENT.md)，统计口径见 [docs/ANALYTICS.md](docs/ANALYTICS.md)。
+更详细的边界与请求链路见 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)，部署步骤见 [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)，内容编辑说明见 [docs/CONTENT.md](docs/CONTENT.md)，统计口径见 [docs/ANALYTICS.md](docs/ANALYTICS.md)，后台安全与 TOTP 见 [docs/SECURITY.md](docs/SECURITY.md)。
 
 ## 环境变量
 
@@ -84,6 +84,8 @@ homepage/
 | `ADMIN_USERNAME` / `ADMIN_PASSWORD` | 后台凭据 | 必填 |
 | `MYSQL_ROOT_PASSWORD` / `MYSQL_PASSWORD` | 数据库凭据 | 必填 |
 | `VISITOR_HASH_SALT` | IP 指纹独立盐值 | 必填 |
+| `TOTP_ENCRYPTION_KEY` | TOTP secret 的独立 AES-256 密钥 | 必填 |
+| `TOTP_ISSUER` | Authenticator 中显示的发行者 | huangxin.work |
 | `VISITOR_UNIQUE_WINDOW` | 同 IP 去重窗口 | 24h |
 | `VISITOR_LOG_RETENTION` | 访问日志保留期 | 90d |
 | `APP_PORT` / `MYSQL_PORT` | 本地端口 | 8080 / 3307 |
@@ -108,6 +110,14 @@ homepage/
 ```
 
 除登录外，`/api/admin/**` 都需要 `Authorization: Bearer <token>`。
+
+登录请求：
+
+```json
+{"username":"...","password":"...","totpCode":"启用后填写 6 位验证码"}
+```
+
+TOTP 管理接口位于 `/api/admin/totp/status|setup|confirm|disable`，详细流程见安全文档。
 
 ## License
 
