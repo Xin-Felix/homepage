@@ -20,34 +20,49 @@ import work.huangxin.homepage.common.ClientIp;
 import work.huangxin.homepage.config.HomepageProperties;
 
 /**
- * 后台登录。
- * <p>
- * 原项目是命令行 AdminPanel 每次请求都把明文密码放进 Authorization 头；
- * 这里改成：密码只在登录时提交一次，换取一个随机 token（内存保存、有过期时间），
- * 之后后台请求带 {@code Authorization: Bearer <token>}。
+ * 固定管理员账号登录：用户名和密码只在登录时提交，验证成功后换取随机 token。
+ * 后续后台请求使用 {@code Authorization: Bearer <token>}，token 仅保存在服务端内存并自动过期。
  */
 @Slf4j
 @Service
 public class AdminAuthService {
 
     private static final String PASSWORD_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+    private static final String DEVELOPMENT_USERNAME = "admin";
+    private static final int MAX_USERNAME_LENGTH = 100;
 
     private final SecureRandom random = new SecureRandom();
+    private final byte[] usernameDigest;
     private final byte[] passwordDigest;
     private final Duration tokenTtl;
     private final Cache<String, Instant> tokens;
 
     public AdminAuthService(HomepageProperties properties, Environment environment) {
+        boolean production = environment.acceptsProfiles(Profiles.of("prod"));
+        String username = normalizeUsername(properties.admin().username());
         String password = properties.admin().password();
+
+        if (!StringUtils.hasText(username)) {
+            if (production) {
+                throw new IllegalStateException("生产环境必须通过环境变量 ADMIN_USERNAME 设置后台账号");
+            }
+            username = DEVELOPMENT_USERNAME;
+            log.warn("未配置后台账号（环境变量 ADMIN_USERNAME），开发环境账号：{}", username);
+        }
+        if (username.length() > MAX_USERNAME_LENGTH) {
+            throw new IllegalStateException("后台账号不能超过 " + MAX_USERNAME_LENGTH + " 个字符");
+        }
         if (!StringUtils.hasText(password)) {
-            if (environment.acceptsProfiles(Profiles.of("prod"))) {
+            if (production) {
                 throw new IllegalStateException("生产环境必须通过环境变量 ADMIN_PASSWORD 设置后台密码");
             }
             password = randomPassword(16);
             log.warn("未配置后台密码（环境变量 ADMIN_PASSWORD），本次启动的临时密码：{}", password);
-        } else if (password.length() < 8) {
-            log.warn("后台密码少于 8 位，建议换一个更长的密码");
+        } else if (password.length() < 12) {
+            log.warn("后台密码少于 12 位，建议换一个更长的密码");
         }
+
+        this.usernameDigest = ClientIp.sha256(username);
         this.passwordDigest = ClientIp.sha256(password);
         this.tokenTtl = properties.admin().tokenTtl();
         this.tokens = Caffeine.newBuilder()
@@ -56,15 +71,18 @@ public class AdminAuthService {
                 .build();
     }
 
-    /** 校验密码，成功返回新 token。 */
-    public Optional<LoginResult> login(String password) {
-        if (password == null) {
+    /**
+     * 同时校验用户名和密码。两项摘要总会全部计算和比较，避免用响应时间枚举用户名。
+     */
+    public Optional<LoginResult> login(String username, String password) {
+        byte[] candidateUsername = ClientIp.sha256(normalizeUsername(username));
+        byte[] candidatePassword = ClientIp.sha256(password == null ? "" : password);
+        boolean usernameMatches = MessageDigest.isEqual(usernameDigest, candidateUsername);
+        boolean passwordMatches = MessageDigest.isEqual(passwordDigest, candidatePassword);
+        if (!(usernameMatches & passwordMatches)) {
             return Optional.empty();
         }
-        // 比较摘要 + 常量时间比较，避免时序侧信道
-        if (!MessageDigest.isEqual(passwordDigest, ClientIp.sha256(password))) {
-            return Optional.empty();
-        }
+
         byte[] bytes = new byte[32];
         random.nextBytes(bytes);
         String token = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
@@ -93,6 +111,10 @@ public class AdminAuthService {
             return null;
         }
         return authorizationHeader.substring("Bearer ".length()).trim();
+    }
+
+    private static String normalizeUsername(String username) {
+        return username == null ? "" : username.trim();
     }
 
     private String randomPassword(int length) {

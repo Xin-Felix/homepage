@@ -15,8 +15,10 @@
 <main id="login-view" class="login" hidden>
   <form id="login-form" class="login-card">
     <h1>主页管理后台</h1>
-    <p class="muted">登录后可以编辑主页上的所有内容</p>
-    <label for="login-password">后台密码</label>
+    <p class="muted">使用管理员账号登录后管理主页</p>
+    <label for="login-username">管理员账号</label>
+    <input id="login-username" name="username" type="text" autocomplete="username" maxlength="100" required />
+    <label for="login-password">管理员密码</label>
     <input id="login-password" name="password" type="password" autocomplete="current-password" required />
     <button type="submit" class="btn primary block">登录</button>
     <p id="login-error" class="form-error" role="alert"></p>
@@ -35,6 +37,7 @@
   <div class="layout">
     <nav class="sidebar" aria-label="后台导航">
       <a class="nav-item" href="#dashboard" data-tab="dashboard">概览</a>
+      <a class="nav-item" href="#visits" data-tab="visits">访问日志</a>
       <a class="nav-item" href="#profile" data-tab="profile">基本信息</a>
       <a class="nav-item" href="#experiences" data-tab="experiences">工作经历</a>
       <a class="nav-item" href="#projects" data-tab="projects">开源与项目</a>

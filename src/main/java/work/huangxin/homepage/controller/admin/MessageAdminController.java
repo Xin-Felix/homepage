@@ -10,9 +10,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import lombok.RequiredArgsConstructor;
 import work.huangxin.homepage.common.ApiResponse;
+import work.huangxin.homepage.common.PageResult;
 import work.huangxin.homepage.domain.Message;
 import work.huangxin.homepage.service.MessageService;
-import work.huangxin.homepage.service.MessageService.PageResult;
 
 @RestController
 @RequestMapping("/api/admin/messages")

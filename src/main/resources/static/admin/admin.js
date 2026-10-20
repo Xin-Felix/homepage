@@ -205,11 +205,12 @@
 
   // ---------------------------------------------------------------- 路由
 
-  const state = { messagePage: 0 };
+  const state = { visitPage: 0, messagePage: 0 };
   let renderSeq = 0;
 
   const TABS = {
     dashboard: renderDashboard,
+    visits: () => renderVisits(state.visitPage),
     profile: renderProfile,
     experiences: () => renderList('experiences'),
     projects: () => renderList('projects'),
@@ -274,7 +275,7 @@
     return h('section', {},
       panelHead('概览', '主页的整体情况'),
       h('div', { class: 'stats' },
-        stat('独立访问', d.views, '/', false),
+        stat('独立访问', d.views, '#visits', false),
         stat('未读留言', d.unreadMessages, '#messages', d.unreadMessages > 0),
         stat('全部留言', d.messages, '#messages'),
         stat('工作经历', d.experiences, '#experiences'),
@@ -402,6 +403,45 @@
     if (first) first.focus();
   }
 
+  // ---------------------------------------------------------------- 访问日志
+
+  async function renderVisits(page) {
+    const data = await api('GET', `/api/admin/visits?page=${page}&size=20`);
+    if (data.items.length === 0 && page > 0) {
+      state.visitPage = page - 1;
+      return renderVisits(page - 1);
+    }
+    state.visitPage = page;
+
+    const list = h('ul', { class: 'list' });
+    if (!data.items.length) list.append(h('li', { class: 'empty' }, '还没有访问日志'));
+
+    for (const visit of data.items) {
+      const refreshes = Math.max(0, Number(visit.hits || 1) - 1);
+      list.append(h('li', { class: 'visit' },
+        h('div', { class: 'visit-head' },
+          h('strong', {}, visit.source || 'unknown'),
+          h('span', { class: 'badge', title: '加盐后的来源指纹' }, '#' + visit.fingerprint),
+          h('span', { class: 'badge' }, `请求 ${visit.hits} 次`),
+          refreshes ? h('span', { class: 'muted' }, `其中刷新 ${refreshes} 次`) : null),
+        h('dl', { class: 'visit-grid' },
+          h('div', {}, h('dt', {}, '首次访问'), h('dd', {}, formatTime(visit.firstVisitedAt))),
+          h('div', {}, h('dt', {}, '最后访问'), h('dd', {}, formatTime(visit.lastVisitedAt))),
+          h('div', {}, h('dt', {}, '访问路径'), h('dd', {}, visit.path || '/')),
+          h('div', {}, h('dt', {}, '来源页面'), h('dd', {}, visit.referer || '直接访问')),
+          h('div', { class: 'visit-wide' }, h('dt', {}, '浏览器 / 设备'), h('dd', {}, visit.userAgent || '未提供')))));
+    }
+
+    const pager = data.totalPages > 1
+      ? h('div', { class: 'pager' },
+        h('button', { type: 'button', class: 'btn', disabled: page === 0, onclick: () => show(() => renderVisits(page - 1)) }, '上一页'),
+        h('span', {}, `${page + 1} / ${data.totalPages}`),
+        h('button', { type: 'button', class: 'btn', disabled: page >= data.totalPages - 1, onclick: () => show(() => renderVisits(page + 1)) }, '下一页'))
+      : null;
+
+    return h('section', {}, panelHead('访问日志', `共 ${data.total} 条独立访问记录`), list, pager);
+  }
+
   // ---------------------------------------------------------------- 留言
 
   function formatTime(value) {
@@ -464,9 +504,11 @@
     $('#app-view').hidden = true;
     $('#login-view').hidden = false;
     $('#login-error').textContent = message || '';
-    const input = $('#login-password');
-    input.value = '';
-    input.focus();
+    const username = $('#login-username');
+    const password = $('#login-password');
+    password.value = '';
+    if (username.value.trim()) password.focus();
+    else username.focus();
   }
 
   function showApp() {
@@ -478,11 +520,12 @@
   async function onLogin(event) {
     event.preventDefault();
     const button = $('button[type="submit"]', event.currentTarget);
+    const username = $('#login-username').value.trim();
     const password = $('#login-password').value;
     button.disabled = true;
     $('#login-error').textContent = '';
     try {
-      const data = await api('POST', '/api/admin/login', { password });
+      const data = await api('POST', '/api/admin/login', { username, password });
       setToken(data.token);
       showApp();
     } catch (err) {

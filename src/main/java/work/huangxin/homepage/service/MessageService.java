@@ -1,7 +1,5 @@
 package work.huangxin.homepage.service;
 
-import java.util.List;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -10,6 +8,7 @@ import org.springframework.util.StringUtils;
 
 import lombok.RequiredArgsConstructor;
 import work.huangxin.homepage.common.ClientIp;
+import work.huangxin.homepage.common.PageResult;
 import work.huangxin.homepage.common.exception.NotFoundException;
 import work.huangxin.homepage.domain.Message;
 import work.huangxin.homepage.repository.MessageRepository;
@@ -60,8 +59,5 @@ public class MessageService {
     @Transactional(readOnly = true)
     public long countUnread() {
         return messageRepository.countByReadFalse();
-    }
-
-    public record PageResult<T>(List<T> items, long total, int page, int size, int totalPages) {
     }
 }

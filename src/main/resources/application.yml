@@ -27,20 +27,24 @@ server:
 
 homepage:
   admin:
-    # 后台密码。不配置时开发环境会随机生成一个并打印在启动日志里；prod 环境必须配置
+    # 生产环境必须通过环境变量配置固定账号和密码
+    username: ${ADMIN_USERNAME:}
     password: ${ADMIN_PASSWORD:}
     token-ttl: 12h
   rate-limit:
     capacity: 600
     period: 30s
     login-failures: 5
-    login-period: 5m
+    login-period: 15m
     messages: 5
     message-period: 10m
   views:
-    # 同一 IP 在该窗口内只计一次；可通过 VISITOR_UNIQUE_WINDOW 调整（如 30m、24h、7d）
+    # 同一 IP 在该窗口内只计一次；日志持久化到数据库
     unique-window: ${VISITOR_UNIQUE_WINDOW:24h}
-    max-tracked-ips: ${VISITOR_MAX_TRACKED_IPS:100000}
+    # 访问日志默认保留 90 天，累计访问总数不会随日志清理减少
+    log-retention: ${VISITOR_LOG_RETENTION:90d}
+    # 对 IP 指纹加盐；生产环境必须配置独立随机值
+    hash-salt: ${VISITOR_HASH_SALT:}
   notification:
     # 新留言邮件提醒的收件人；还需要配置 spring.mail.*（见 README）
     email: ${NOTIFY_EMAIL:}

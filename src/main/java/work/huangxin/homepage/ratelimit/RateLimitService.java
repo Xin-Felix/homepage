@@ -1,7 +1,10 @@
 package work.huangxin.homepage.ratelimit;
 
 import java.time.Duration;
+import java.time.Instant;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 import org.springframework.stereotype.Service;
 
@@ -11,26 +14,31 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.ConsumptionProbe;
-import io.github.bucket4j.EstimationProbe;
 import work.huangxin.homepage.common.exception.RateLimitException;
 import work.huangxin.homepage.config.HomepageProperties;
 
 /**
- * 基于 Bucket4j 的按 IP 限流，分三类：普通接口、登录失败、留言。
- * 桶放在 Caffeine 里，一段时间不访问自动过期（原项目用的是 Guava LoadingCache）。
+ * 普通请求和留言使用 Bucket4j；后台登录在每个 IP 的互斥区内完成验证与失败记账。
  */
 @Service
 public class RateLimitService {
 
     private final Limiter requests;
-    private final Limiter loginFailures;
     private final Limiter messages;
+    private final Cache<String, LoginFailureState> loginFailures;
+    private final long maxLoginFailures;
+    private final Duration loginLockDuration;
 
     public RateLimitService(HomepageProperties properties) {
         HomepageProperties.RateLimit cfg = properties.rateLimit();
         this.requests = new Limiter(cfg.capacity(), cfg.period());
-        this.loginFailures = new Limiter(cfg.loginFailures(), cfg.loginPeriod());
         this.messages = new Limiter(cfg.messages(), cfg.messagePeriod());
+        this.maxLoginFailures = cfg.loginFailures();
+        this.loginLockDuration = cfg.loginPeriod();
+        this.loginFailures = Caffeine.newBuilder()
+                .expireAfterAccess(loginLockDuration.plusMinutes(1))
+                .maximumSize(100_000)
+                .build();
     }
 
     /** 普通接口限流，tokens 为本次请求的“花费”。 */
@@ -38,17 +46,34 @@ public class RateLimitService {
         requests.consume(ip, tokens, "请求过于频繁");
     }
 
-    /** 登录前检查：失败次数是否已用完（不扣减）。 */
-    public void checkLoginAllowed(String ip) {
-        EstimationProbe probe = loginFailures.bucket(ip).estimateAbilityToConsume(1);
-        if (!probe.canBeConsumed()) {
-            throw new RateLimitException("登录失败次数过多", toMillis(probe.getNanosToWaitForRefill()));
-        }
-    }
+    /**
+     * 串行化同一 IP 的“检查锁定 → 校验凭据 → 记录结果”，并发请求无法越过失败上限。
+     * 成功会清除失败状态；失败达到上限后，从该次失败起锁定完整周期。
+     */
+    public <T> Optional<T> executeLoginAttempt(String ip, Supplier<Optional<T>> credentialVerifier) {
+        LoginFailureState state = loginFailures.get(ip, key -> new LoginFailureState());
+        synchronized (state) {
+            Instant now = Instant.now();
+            if (state.lockedUntil != null && state.lockedUntil.isAfter(now)) {
+                long waitMillis = Duration.between(now, state.lockedUntil).toMillis();
+                throw new RateLimitException("登录失败次数过多", Math.max(1, waitMillis));
+            }
+            if (state.lockedUntil != null) {
+                state.reset();
+            }
 
-    /** 记录一次登录失败。 */
-    public void recordLoginFailure(String ip) {
-        loginFailures.bucket(ip).tryConsume(1);
+            Optional<T> result = credentialVerifier.get();
+            if (result.isPresent()) {
+                state.reset();
+                return result;
+            }
+
+            state.failures++;
+            if (state.failures >= maxLoginFailures) {
+                state.lockedUntil = now.plus(loginLockDuration);
+            }
+            return Optional.empty();
+        }
     }
 
     /** 留言限流。 */
@@ -60,6 +85,16 @@ public class RateLimitService {
         return TimeUnit.NANOSECONDS.toMillis(nanos);
     }
 
+    private static final class LoginFailureState {
+        private long failures;
+        private Instant lockedUntil;
+
+        void reset() {
+            failures = 0;
+            lockedUntil = null;
+        }
+    }
+
     private static final class Limiter {
 
         private final long capacity;
@@ -69,7 +104,6 @@ public class RateLimitService {
         Limiter(long capacity, Duration period) {
             this.capacity = capacity;
             this.period = period;
-            // 桶在补满所需时间之后过期即可，再访问时重新创建，结果等价
             this.buckets = Caffeine.newBuilder()
                     .expireAfterAccess(period.plusMinutes(1))
                     .maximumSize(100_000)

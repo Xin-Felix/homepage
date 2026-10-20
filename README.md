@@ -3,7 +3,7 @@
 前台展示 + 管理后台，一个 Spring Boot 应用搞定。后台架构源自 [jasonpyau.com](https://github.com/jasonpyau/jasonpyau.com)；前台已重新设计为深色 Bento 作品集，主要参考 [Bentofolio](https://github.com/mkhoirulwafa18/bentofolio) 的信息架构和 [Magic UI Portfolio](https://github.com/dillionverma/portfolio) 的交互方式。三个上游项目均使用 MIT 协议。
 
 - 前台 `/`：全新响应式 Bento 设计，支持明暗主题、滚动动效、动态卡片和弹窗留言；Thymeleaf 服务端渲染，内容全部来自数据库
-- 后台 `/admin`：原生 JS 单页，无需前端构建；可编辑基本信息、工作经历、项目、联系方式，查看 / 处理留言
+- 后台 `/admin`：管理员账号 + 密码登录并带 IP 失败锁定；可编辑基本信息、工作经历、项目、联系方式，查看访问日志和处理留言
 - 留言板：访客在主页留言，后台查看；可选邮件提醒；后台可一键关闭
 
 ## 相比原项目改了什么
@@ -49,19 +49,20 @@ docker compose down -v            # 连数据一起删除，谨慎
 需要本机 JDK 17+，数据存在 `./data/` 下的 H2 文件库（已 gitignore）：
 
 ```bash
-ADMIN_PASSWORD='换成你的密码' ./mvnw spring-boot:run
+ADMIN_USERNAME='管理员账号' ADMIN_PASSWORD='换成你的密码' ./mvnw spring-boot:run
 ```
 
-不设 `ADMIN_PASSWORD` 时会随机生成一个临时密码打印在启动日志里。
+不设账号时开发环境默认使用 `admin`；不设密码时会随机生成临时密码并打印在启动日志里。生产环境必须同时配置两者。
 
 ## 部署到服务器
 
 服务器装好 Docker 后，同样用 `docker compose up -d --build`；`.env` 里换成正式密码并配置真实 SMTP（见 `.env.example`）。
-应用用 `prod` 配置运行，表结构由 Hibernate 自动创建（`ddl-auto: update`），没设 `ADMIN_PASSWORD` 会拒绝启动。
+应用用 `prod` 配置运行，表结构由 Hibernate 自动创建（`ddl-auto: update`），没设置 `ADMIN_USERNAME` 或 `ADMIN_PASSWORD` 会拒绝启动。
 
 不用 Docker 的话，`./mvnw -DskipTests package` 打包后：
 
 ```bash
+export ADMIN_USERNAME='管理员账号'
 export ADMIN_PASSWORD='足够长的密码'
 export DB_URL='jdbc:mysql://127.0.0.1:3306/homepage?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai'
 export DB_USERNAME=homepage
@@ -88,7 +89,8 @@ prod 配置开启了 `server.forward-headers-strategy=native`，只信任内网�
 
 | 环境变量 | 说明 | 默认 |
 |---|---|---|
-| `ADMIN_PASSWORD` | 后台密码 | 开发环境随机生成 |
+| `ADMIN_USERNAME` | 后台管理员账号 | 生产环境必填 |
+| `ADMIN_PASSWORD` | 后台管理员密码 | 生产环境必填 |
 | `APP_PORT` | Docker 映射的应用端口 | 8080 |
 | `MYSQL_PASSWORD` / `MYSQL_ROOT_PASSWORD` | MySQL 密码 | 必填 |
 | `NOTIFY_EMAIL` | 新留言通知到这个邮箱 | 空，不发送 |
@@ -99,9 +101,10 @@ prod 配置开启了 `server.forward-headers-strategy=native`，只信任内网�
 | `MAIL_SSL` | 直接 SSL（常见端口 465） | false |
 | `MAIL_STARTTLS` | STARTTLS（常见端口 587） | false |
 | `VISITOR_UNIQUE_WINDOW` | 同一 IP 再次计数前的等待时间 | 24h |
-| `VISITOR_MAX_TRACKED_IPS` | 内存中最多保留的 IP 摘要数量 | 100000 |
+| `VISITOR_LOG_RETENTION` | 访问日志保留时间（不影响累计数） | 90d |
+| `VISITOR_HASH_SALT` | IP 指纹独立盐值，生产环境必填 | 必填 |
 
-独立访问统计默认对同一 IP 去重 24 小时；应用只在内存保存 SHA-256 摘要，不保存明文 IP。单实例容器重启后去重窗口会重新开始。
+独立访问统计默认对同一 IP 去重 24 小时。每个窗口写入一条持久化访问日志，同一窗口内刷新只增加日志的请求次数；日志仅保存脱敏网段、加盐 SHA-256 指纹、来源站点和粗粒度设备分类，不保存明文 IP、完整来源 URL 或原始 User-Agent。日志默认 90 天自动清理，累计独立访问数不会减少；日志保留期必须大于或等于 IP 去重窗口。
 
 QQ 邮箱通常使用 `MAIL_PORT=465`、`MAIL_SSL=true`；Gmail 等 STARTTLS 服务通常使用 `MAIL_PORT=587`、`MAIL_STARTTLS=true`。修改 `.env` 后执行：
 
@@ -138,7 +141,8 @@ src/main/resources
 
 | 接口 | 说明 |
 |---|---|
-| `POST /api/admin/login` | `{"password": "..."}` → token |
+| `POST /api/admin/login` | `{"username": "...", "password": "..."}` → token |
+| `GET /api/admin/visits?page=0&size=20` | 访问日志分页 |
 | `GET/PUT /api/admin/profile` | 基本信息 |
 | `GET/POST /api/admin/{experiences,projects,contacts}` | 列表 / 新增 |
 | `PUT/DELETE /api/admin/{...}/{id}` | 修改 / 删除 |
