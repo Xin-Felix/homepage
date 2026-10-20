@@ -20,14 +20,14 @@
 <header class="header-shell">
   <nav class="topbar" aria-label="主导航">
     <a class="brand" href="#top" aria-label="回到页面顶部"><span class="brand-mark" aria-hidden="true">HX</span><span class="brand-copy"><strong><%= p.name %></strong><small>BACKEND ENGINEER</small></span></a>
-    <div class="desktop-nav"><a href="#about">关于</a><% if (site.experiences.length) { %><a href="#experience">经历</a><% } %><% if (site.projects.length) { %><a href="#projects">项目</a><% } %><a href="#contact">联系</a></div>
+    <div class="desktop-nav"><a href="#about">关于</a><% if (site.experiences.length) { %><a href="#experience">经历</a><% } %><% if (site.projects.length) { %><a href="#projects">项目</a><% } %><a href="/notes">笔记</a><a href="#contact">联系</a></div>
     <div class="nav-actions">
       <span class="status-pill"><i aria-hidden="true"></i>开放合适机会</span>
       <button class="icon-button" id="theme-toggle" type="button" aria-label="切换明暗主题" title="切换明暗主题"><svg class="theme-icon theme-icon--moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"/></svg><svg class="theme-icon theme-icon--sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.66 6.34l1.41-1.41"/></svg></button>
       <button class="icon-button menu-button" id="menu-toggle" type="button" aria-label="打开导航菜单" aria-expanded="false" aria-controls="mobile-menu"><span></span><span></span></button>
     </div>
   </nav>
-  <div class="mobile-menu" id="mobile-menu" hidden><a href="#about"><span>01</span>关于</a><% if (site.experiences.length) { %><a href="#experience"><span>02</span>经历</a><% } %><% if (site.projects.length) { %><a href="#projects"><span>03</span>项目</a><% } %><a href="#contact"><span>04</span>联系</a></div>
+  <div class="mobile-menu" id="mobile-menu" hidden><a href="#about"><span>01</span>关于</a><% if (site.experiences.length) { %><a href="#experience"><span>02</span>经历</a><% } %><% if (site.projects.length) { %><a href="#projects"><span>03</span>项目</a><% } %><a href="/notes"><span>04</span>笔记</a><a href="#contact"><span>05</span>联系</a></div>
 </header>
 <main class="site-shell">
   <section class="hero-grid section-anchor" id="top" aria-labelledby="hero-title">

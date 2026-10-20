@@ -138,6 +138,39 @@ app.get('/projects/:slug', async (req, res, next) => {
   }
 });
 
+app.get('/notes', async (req, res, next) => {
+  try {
+    const [home, notes] = await Promise.all([
+      backendJson('/api/public/home', { method: 'GET' }, req),
+      backendJson('/api/public/notes', { method: 'GET' }, req),
+    ]);
+    const views = await recordPageVisit(req, home.views);
+    res.render('notes', { p: home.profile, notes, views, year: new Date().getFullYear() });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get('/notes/:slug', async (req, res, next) => {
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(req.params.slug)) return next();
+  try {
+    const [home, note] = await Promise.all([
+      backendJson('/api/public/home', { method: 'GET' }, req),
+      backendJson(`/api/public/notes/${encodeURIComponent(req.params.slug)}`, { method: 'GET' }, req),
+    ]);
+    const views = await recordPageVisit(req, home.views);
+    res.render('note', {
+      p: home.profile, note, contentHtml: renderMarkdown(note.contentMarkdown),
+      views, year: new Date().getFullYear(), formatDate,
+    });
+  } catch (error) {
+    if (error.statusCode === 404) {
+      return res.status(404).render('error', { status: 404, message: '这篇技术笔记不存在或尚未发布。' });
+    }
+    next(error);
+  }
+});
+
 app.use((req, res) => res.status(404).render('error', { status: 404, message: '你要找的页面不存在。' }));
 app.use((error, req, res, next) => {
   console.error(error);
@@ -159,6 +192,13 @@ async function recordPageVisit(req, fallbackViews) {
     console.error('visit tracking failed:', error.message);
     return fallbackViews;
   }
+}
+
+function formatDate(value) {
+  if (!value) return '';
+  return new Intl.DateTimeFormat('zh-CN', {
+    timeZone: 'Asia/Shanghai', year: 'numeric', month: '2-digit', day: '2-digit',
+  }).format(new Date(value));
 }
 
 function renderMarkdown(markdown) {

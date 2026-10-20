@@ -568,3 +568,31 @@ button { color: inherit; }
   .markdown-body h2 { font-size: 26px; }
   .detail-footer { flex-direction: column; }
 }
+
+/* ======================================================== 技术笔记 */
+.notes-shell { max-width: 1120px; min-height: 75vh; margin: 0 auto; padding: 90px 24px 110px; }
+.notes-hero { max-width: 950px; padding-bottom: 60px; }
+.notes-hero h1 { margin-top: 20px; font-size: clamp(48px, 7vw, 90px); line-height: .98; letter-spacing: -.06em; }
+.notes-hero h1 em { color: var(--muted); font-family: Georgia, serif; font-weight: 400; }
+.notes-hero > p { color: var(--muted); margin-top: 24px; font-size: 16px; }
+.notes-list { border-top: 1px solid var(--line); }
+.note-card { min-height: 220px; padding: 30px 18px; display: grid; grid-template-columns: 65px 1fr 50px; align-items: center; gap: 25px; border-bottom: 1px solid var(--line); text-decoration: none; transition: padding .3s var(--ease), background .3s; }
+.note-card:hover { padding-left: 28px; background: color-mix(in srgb, var(--card) 65%, transparent); }
+.note-index { color: var(--muted-2); font: 700 10px ui-monospace, monospace; }
+.note-card h2 { max-width: 760px; margin: 14px 0 9px; font-size: clamp(25px, 3vw, 40px); line-height: 1.15; letter-spacing: -.045em; }
+.note-card p { max-width: 720px; color: var(--muted); font-size: 13px; line-height: 1.75; }
+.note-card small { display: block; color: var(--muted-2); margin-top: 15px; font-size: 10px; }
+.note-card > i { width: 42px; height: 42px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 50%; font-style: normal; transition: .25s; }
+.note-card:hover > i { color: var(--lime-ink); border-color: var(--lime); background: var(--lime); transform: translate(3px,-3px); }
+.note-tags { display: flex; flex-wrap: wrap; gap: 7px; }
+.note-tags span { padding: 6px 9px; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; font-size: 9px; }
+.note-byline { display: flex; flex-wrap: wrap; gap: 10px 24px; color: var(--muted); margin-top: 28px; font: 650 10px ui-monospace, monospace; }
+.notes-empty { padding: 80px 0; color: var(--muted); border-top: 1px solid var(--line); }
+@media (max-width: 760px) {
+  .notes-shell { padding: 65px 16px 80px; }
+  .notes-hero h1 { font-size: 43px; }
+  .note-card { min-height: 260px; padding: 25px 5px; grid-template-columns: 34px 1fr; gap: 10px; }
+  .note-card > i { display: none; }
+  .note-card h2 { font-size: 27px; }
+  .note-detail .detail-hero h1 { font-size: 43px; }
+}

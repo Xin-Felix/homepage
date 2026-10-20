@@ -121,6 +121,22 @@
       ],
       summary: (p) => ({ title: p.name, sub: p.slug ? `/projects/${p.slug}` : (p.link || '仅首页卡片') }),
     },
+    notes: {
+      title: '技术笔记',
+      desc: 'Markdown 技术文章，草稿不会出现在公开页面',
+      noun: '笔记',
+      path: '/api/admin/notes',
+      sortable: false,
+      fields: [
+        { key: 'title', label: '标题', required: true, max: 120 },
+        { key: 'slug', label: '文章路径', required: true, max: 100, placeholder: 'system-migration-double-write' },
+        { key: 'summary', label: '摘要', type: 'textarea', rows: 3, required: true, max: 500 },
+        { key: 'tags', label: '标签', type: 'list', placeholder: '系统迁移, 双写, 灰度' },
+        { key: 'contentMarkdown', label: '正文（Markdown）', type: 'textarea', rows: 18, required: true, max: 100000 },
+        { key: 'published', label: '公开发布', type: 'checkbox' },
+      ],
+      summary: (n) => ({ title: n.title, sub: `${n.published ? '已发布' : '草稿'} · /notes/${n.slug} · 阅读 ${n.readCount || 0}` }),
+    },
     contacts: {
       title: '联系方式',
       desc: '主页「联系我」里的条目',
@@ -219,6 +235,7 @@
     profile: renderProfile,
     experiences: () => renderList('experiences'),
     projects: () => renderList('projects'),
+    notes: () => renderList('notes'),
     contacts: () => renderList('contacts'),
     messages: () => renderMessages(state.messagePage),
   };
@@ -284,7 +301,8 @@
         stat('未读留言', d.unreadMessages, '#messages', d.unreadMessages > 0),
         stat('全部留言', d.messages, '#messages'),
         stat('工作经历', d.experiences, '#experiences'),
-        stat('项目', d.projects, '#projects')),
+        stat('项目', d.projects, '#projects'),
+        stat('技术笔记', d.notes, '#notes')),
       h('p', { class: 'muted' }, '独立访问按 IP 去重，同一 IP 在 24 小时内只计一次。'));
   }
 
@@ -322,19 +340,24 @@
     }
     items.forEach((item, index) => {
       const s = cfg.summary(item);
-      list.append(h('li', { class: 'row' + (item.visible ? '' : ' is-hidden'), 'data-id': item.id },
+      const reorderActions = cfg.sortable === false ? [] : [
+        h('button', {
+          type: 'button', class: 'btn icon', 'data-act': 'up', 'aria-label': `上移：${s.title}`, title: '上移',
+          disabled: index === 0, onclick: () => move(key, items, index, -1),
+        }, '↑'),
+        h('button', {
+          type: 'button', class: 'btn icon', 'data-act': 'down', 'aria-label': `下移：${s.title}`, title: '下移',
+          disabled: index === items.length - 1, onclick: () => move(key, items, index, 1),
+        }, '↓'),
+      ];
+      list.append(h('li', { class: 'row' + (item.visible === false ? ' is-hidden' : ''), 'data-id': item.id },
         h('div', { class: 'row-main' },
-          h('div', { class: 'row-title' }, s.title, item.visible ? null : h('span', { class: 'badge' }, '已隐藏')),
+          h('div', { class: 'row-title' }, s.title,
+            item.visible === false ? h('span', { class: 'badge' }, '已隐藏') : null,
+            item.published === false && key === 'notes' ? h('span', { class: 'badge' }, '草稿') : null),
           h('div', { class: 'row-sub' }, s.sub || '')),
         h('div', { class: 'row-actions' },
-          h('button', {
-            type: 'button', class: 'btn icon', 'data-act': 'up', 'aria-label': `上移：${s.title}`, title: '上移',
-            disabled: index === 0, onclick: () => move(key, items, index, -1),
-          }, '↑'),
-          h('button', {
-            type: 'button', class: 'btn icon', 'data-act': 'down', 'aria-label': `下移：${s.title}`, title: '下移',
-            disabled: index === items.length - 1, onclick: () => move(key, items, index, 1),
-          }, '↓'),
+          ...reorderActions,
           h('button', { type: 'button', class: 'btn', 'data-act': 'edit', onclick: () => openEditor(key, item) }, '编辑'),
           h('button', { type: 'button', class: 'btn danger', onclick: () => removeItem(key, item, s.title) }, '删除'))));
     });
@@ -362,7 +385,8 @@
   }
 
   async function removeItem(key, item, title) {
-    if (!confirm(`确定删除「${title}」吗？删除后无法恢复。\n（只是暂时不想展示的话，可以在编辑里取消「在主页显示」）`)) return;
+    const extra = key === 'notes' ? '' : '\n（只是暂时不想展示的话，可以在编辑里取消展示或发布）';
+    if (!confirm(`确定删除「${title}」吗？删除后无法恢复。${extra}`)) return;
     try {
       await api('DELETE', `${RESOURCES[key].path}/${item.id}`);
       toast('已删除');
@@ -376,7 +400,7 @@
     const cfg = RESOURCES[key];
     const dialog = $('#editor');
     const isNew = !item;
-    const isMarkdownEditor = key === 'projects';
+    const isMarkdownEditor = key === 'projects' || key === 'notes';
     dialog.classList.toggle('editor-wide', isMarkdownEditor);
 
     const submit = h('button', { type: 'submit', class: 'btn primary' }, '保存');

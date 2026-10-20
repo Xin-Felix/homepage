@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import work.huangxin.homepage.common.ApiResponse;
 import work.huangxin.homepage.service.ExperienceService;
 import work.huangxin.homepage.service.MessageService;
+import work.huangxin.homepage.service.NoteService;
 import work.huangxin.homepage.service.ProjectService;
 import work.huangxin.homepage.service.SiteService;
 
@@ -19,6 +20,7 @@ public class DashboardAdminController {
     private final SiteService siteService;
     private final ExperienceService experienceService;
     private final ProjectService projectService;
+    private final NoteService noteService;
     private final MessageService messageService;
 
     @GetMapping
@@ -28,9 +30,11 @@ public class DashboardAdminController {
                 messageService.count(),
                 messageService.countUnread(),
                 experienceService.count(),
-                projectService.count()));
+                projectService.count(),
+                noteService.count()));
     }
 
-    public record Dashboard(long views, long messages, long unreadMessages, long experiences, long projects) {
+    public record Dashboard(long views, long messages, long unreadMessages,
+                            long experiences, long projects, long notes) {
     }
 }
