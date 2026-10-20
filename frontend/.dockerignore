@@ -1,3 +1,6 @@
 node_modules/
+.nuxt/
+.output/
+coverage/
 npm-debug.log
 .DS_Store

@@ -5,6 +5,8 @@ backend/data/
 # Node.js
 frontend/node_modules/
 frontend/.cache/
+frontend/.nuxt/
+frontend/.output/
 frontend/coverage/
 
 # IDE / system

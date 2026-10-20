@@ -67,7 +67,7 @@ services:
         condition: service_healthy
     environment:
       PORT: 3000
-      BACKEND_ORIGIN: http://backend:8080
+      BACKEND_ORIGIN: ${BACKEND_ORIGIN:-http://backend:8080}
       SITE_URL: ${SITE_URL:-http://localhost:8080}
       TZ: Asia/Shanghai
     ports:

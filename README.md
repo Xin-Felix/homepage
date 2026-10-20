@@ -2,24 +2,25 @@
 
 一个前后端分离、可后台管理的个人技术品牌站。
 
-- `frontend/`：Node.js + Express + EJS，负责 SSR 页面、静态资源与同源 API 代理；
+- `frontend/`：Nuxt 4 + Vue 3 + TypeScript，负责 SSR 页面、Vue 管理后台、Nitro BFF 与同源 API 代理；
 - `backend/`：Spring Boot REST API，负责内容、认证、统计、留言和邮件；
 - `mysql`：内容与日志持久化；
 - Docker Compose 统一构建运行，不依赖宿主机 JDK、Maven、Node.js 或 MySQL。
 
-前台设计参考 MIT 开源项目 [Bentofolio](https://github.com/mkhoirulwafa18/bentofolio) 和 [Magic UI Portfolio](https://github.com/dillionverma/portfolio)，后端最初参考 [jasonpyau.com](https://github.com/jasonpyau/jasonpyau.com)。版权说明见 [LICENSE](LICENSE)。
+前台设计参考 MIT 开源项目 [Bentofolio](https://github.com/mkhoirulwafa18/bentofolio) 和 [Magic UI Portfolio](https://github.com/dillionverma/portfolio)。Vue 管理后台的信息架构参考 [SoybeanAdmin](https://github.com/soybeanjs/soybean-admin) 与 [Nuxt Dashboard Template](https://github.com/nuxt-ui-pro/dashboard)，并评估过 [Vue Vben Admin](https://github.com/vbenjs/vue-vben-admin)；项目只借鉴布局和模块化思路，没有搬入其业务代码。后端最初参考 [jasonpyau.com](https://github.com/jasonpyau/jasonpyau.com)。版权说明见 [LICENSE](LICENSE) 与 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
 
 ## 当前能力
 
-- 深色 Bento 响应式主页与明暗主题；
-- 管理员账号 + 密码、Bearer token、IP 登录失败锁定与可选 TOTP；
+- 深色 Bento 响应式主页、明暗主题与 Vue 可复用区块；
+- Nuxt SSR、路由级 SEO、客户端 hydration 和统一错误页；
+- Vue 管理后台、管理员账号 + 密码、Bearer token、IP 登录失败锁定与可选 TOTP；
 - 基本信息、经历、项目、联系方式后台管理；
 - 项目案例详情页、Markdown 编辑与安全预览；
 - 技术笔记的草稿/发布、标签、Markdown 和阅读量；
 - AI Lab 数据模型与后台管理，无公开项目时自动隐藏入口；
 - 24 小时 IP 去重访问统计、访问日志与 7/30/90 天图表看板；
 - 留言、限流、蜜罐反机器人和可选 SMTP 通知；
-- Canonical、JSON-LD、Sitemap、RSS 与动态 Open Graph PNG；
+- Canonical、JSON-LD、Sitemap、RSS 与 1200×630 动态 Open Graph PNG；
 - 前后端均设置 CSP、安全响应头和独立健康检查。
 
 ## 快速启动
@@ -51,25 +52,34 @@ docker compose down -v                 # 删除容器和数据库，谨慎
 
 ```text
 homepage/
-├── frontend/                  # 页面层，不接触数据库和任何业务密钥
-│   ├── src/server.js          # SSR、/api 代理、安全头、健康检查
-│   ├── views/                 # EJS 服务端模板
-│   ├── public/                # CSS、浏览器 JS、管理后台
+├── frontend/                       # Nuxt 页面/BFF，不接触数据库和业务密钥
+│   ├── app/
+│   │   ├── components/public/      # 公开站可复用 Vue 组件
+│   │   ├── components/admin/       # 后台 Shell、表单、图表和资源管理组件
+│   │   ├── composables/            # 页面数据、SEO、交互、后台会话与 API
+│   │   ├── layouts/                # 公开站与后台布局
+│   │   └── pages/                  # 文件路由：首页、详情、笔记、AI、后台
+│   ├── server/
+│   │   ├── api/                    # 页面 BFF 与 `/api/**` Spring 透明代理
+│   │   ├── middleware/             # 请求上下文、后台 no-store/noindex
+│   │   ├── routes/                 # 健康检查、RSS、Sitemap、OG、Markdown 预览
+│   │   └── utils/                  # 后端调用、Markdown、SEO、OG、真实 IP
+│   ├── nuxt.config.ts
 │   ├── Dockerfile
 │   └── package.json
-├── backend/                   # REST 业务层
+├── backend/                        # Spring REST 业务层
 │   ├── src/main/java/work/huangxin/homepage/
-│   │   ├── auth/              # 后台认证与 token
-│   │   ├── controller/        # 公开、后台和内部接口
-│   │   ├── domain/            # JPA 实体
-│   │   ├── repository/        # Spring Data JPA
-│   │   ├── service/           # 业务逻辑
-│   │   ├── ratelimit/         # Bucket4j 与登录锁定
-│   │   └── config/            # 配置、安全头、初始数据
-│   ├── src/main/resources/    # application 配置
+│   │   ├── auth/                   # 后台认证与 token
+│   │   ├── controller/             # 公开、后台和内部接口
+│   │   ├── domain/                 # JPA 实体
+│   │   ├── repository/             # Spring Data JPA
+│   │   ├── service/                # 业务逻辑
+│   │   ├── ratelimit/              # Bucket4j 与登录锁定
+│   │   └── config/                 # 配置、安全头、初始数据
+│   ├── src/main/resources/
 │   ├── Dockerfile
 │   └── pom.xml
-├── docs/                      # 架构与部署文档
+├── docs/                           # 架构、内容、安全、SEO 与部署文档
 ├── docker-compose.yml
 └── .env.example
 ```
@@ -82,7 +92,7 @@ homepage/
 
 | 变量 | 用途 | 默认 |
 |---|---|---|
-| `ADMIN_USERNAME` / `ADMIN_PASSWORD` | 后台凭据 | 必填 |
+| `ADMIN_USERNAME` / `ADMIN_PASSWORD` | 后台凭据，仅注入 backend | 必填 |
 | `MYSQL_ROOT_PASSWORD` / `MYSQL_PASSWORD` | 数据库凭据 | 必填 |
 | `VISITOR_HASH_SALT` | IP 指纹独立盐值 | 必填 |
 | `TOTP_ENCRYPTION_KEY` | TOTP secret 的独立 AES-256 密钥 | 必填 |
@@ -90,7 +100,8 @@ homepage/
 | `VISITOR_UNIQUE_WINDOW` | 同 IP 去重窗口 | 24h |
 | `VISITOR_LOG_RETENTION` | 访问日志保留期 | 90d |
 | `APP_PORT` / `MYSQL_PORT` | 本地端口 | 8080 / 3307 |
-| `SITE_URL` | 站点公网根地址 | http://localhost:8080 |
+| `SITE_URL` | SSR canonical、RSS、Sitemap 和 OG 的公网根地址 | http://localhost:8080 |
+| `BACKEND_ORIGIN` | frontend 访问 Spring 的 Docker 内网地址 | http://backend:8080 |
 | `NOTIFY_EMAIL` | 留言通知收件人 | 空，不发送 |
 | `MAIL_*` | SMTP 参数 | 见 `.env.example` |
 
@@ -98,7 +109,7 @@ homepage/
 
 ## API 约定
 
-浏览器只访问 frontend，frontend 将 `/api/**` 原样代理到内部 backend。成功响应：
+浏览器只访问 frontend。Nitro 将 `/api/**` 原样代理到内部 backend，公开页面则通过 `/api/page/**` BFF 聚合 Spring 数据、统计和 SEO。成功响应：
 
 ```json
 {"status":"success","data":{}}
@@ -110,7 +121,7 @@ homepage/
 {"status":"error","reason":"错误原因","invalidFields":{}}
 ```
 
-除登录外，`/api/admin/**` 都需要 `Authorization: Bearer <token>`。
+除登录外，`/api/admin/**` 都需要 `Authorization: Bearer <token>`。令牌只保存在当前标签页的 `sessionStorage`，不会进入 SSR payload。
 
 登录请求：
 
