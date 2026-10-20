@@ -5,6 +5,8 @@ import { fileURLToPath } from 'node:url';
 import ejs from 'ejs';
 import express from 'express';
 import helmet from 'helmet';
+import { marked } from 'marked';
+import sanitizeHtml from 'sanitize-html';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
@@ -15,7 +17,6 @@ const MAX_PROXY_BODY = 2 * 1024 * 1024;
 const app = express();
 app.disable('x-powered-by');
 app.enable('strict routing');
-// 只信任本机、Docker 私网和链路本地代理；不能直接使用 true，否则客户端可伪造 IP。
 app.set('trust proxy', ['loopback', 'linklocal', 'uniquelocal']);
 app.set('views', path.join(ROOT, 'views'));
 app.set('view engine', 'ejs');
@@ -23,7 +24,7 @@ app.engine('ejs', ejs.__express);
 
 app.use(helmet({
   crossOriginEmbedderPolicy: false,
-  hsts: false,
+  hsts: false, // TLS/HSTS 由公网最外层反向代理负责。
   frameguard: { action: 'deny' },
   contentSecurityPolicy: {
     directives: {
@@ -37,6 +38,7 @@ app.use(helmet({
       baseUri: ["'self'"],
       formAction: ["'self'"],
       frameAncestors: ["'none'"],
+      upgradeInsecureRequests: null,
     },
   },
   referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
@@ -50,9 +52,19 @@ app.use((req, res, next) => {
   next();
 });
 
-// 管理后台目录路由必须先于静态中间件，避免 express.static 对目录做额外重定向。
 app.get('/admin', (req, res) => res.redirect(302, '/admin/'));
 app.get('/admin/', (req, res) => res.sendFile(path.join(ROOT, 'public/admin/index.html')));
+
+/** Markdown 预览不读取业务数据，但仍要求有效后台 token。 */
+app.post('/admin/markdown-preview', express.json({ limit: '100kb' }), async (req, res) => {
+  try {
+    await backendJson('/api/admin/me', { method: 'GET' }, req);
+    res.json({ status: 'success', data: { html: renderMarkdown(String(req.body?.markdown || '')) } });
+  } catch (error) {
+    res.status(error.statusCode || 401).json({ status: 'error', reason: error.publicMessage || '未登录或登录已过期' });
+  }
+});
+
 app.use(express.static(path.join(ROOT, 'public'), { index: false, etag: true }));
 
 /** 不访问业务页面、不污染访问统计的容器健康检查。 */
@@ -68,7 +80,7 @@ app.get('/readyz', async (req, res) => {
 
 /**
  * 浏览器始终同源访问 /api；frontend 透明转发到内部 backend。
- * 不转发客户端自带的 Forwarded/X-Forwarded-*，而是从 Express 的可信代理结果重建。
+ * 客户端原始转发头不会透传，而是从 Express 的可信代理结果重建。
  */
 app.use('/api', async (req, res) => {
   try {
@@ -85,11 +97,8 @@ app.use('/api', async (req, res) => {
       if (value) res.set(name, value);
     }
     res.status(response.status);
-    if (response.body) {
-      Readable.fromWeb(response.body).pipe(res);
-    } else {
-      res.end();
-    }
+    if (response.body) Readable.fromWeb(response.body).pipe(res);
+    else res.end();
   } catch (error) {
     if (!res.headersSent) {
       res.status(error.statusCode || 502).json({ status: 'error', reason: error.publicMessage || '后端服务暂时不可用' });
@@ -99,24 +108,35 @@ app.use('/api', async (req, res) => {
 
 async function renderHome(req, res) {
   const home = await backendJson('/api/public/home', { method: 'GET' }, req);
-  let views = home.views;
-  if (req.method !== 'HEAD') {
-    try {
-      const counted = await backendJson('/api/public/visits', {
-        method: 'POST',
-        body: JSON.stringify({ path: req.path }),
-      }, req);
-      views = counted.views;
-    } catch (error) {
-      // 统计失败不应让公开主页不可用；错误仍会进入容器日志供排查。
-      console.error('visit tracking failed:', error.message);
-    }
-  }
+  const views = await recordPageVisit(req, home.views);
   res.render('index', { site: home, p: home.profile, views, year: new Date().getFullYear() });
 }
 
 app.get(['/', '/index', '/index.html'], renderHome);
 app.head(['/', '/index', '/index.html'], renderHome);
+
+app.get('/projects/:slug', async (req, res, next) => {
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(req.params.slug)) return next();
+  try {
+    const [home, project] = await Promise.all([
+      backendJson('/api/public/home', { method: 'GET' }, req),
+      backendJson(`/api/public/projects/${encodeURIComponent(req.params.slug)}`, { method: 'GET' }, req),
+    ]);
+    const views = await recordPageVisit(req, home.views);
+    res.render('project', {
+      p: home.profile,
+      project,
+      contentHtml: renderMarkdown(project.contentMarkdown),
+      views,
+      year: new Date().getFullYear(),
+    });
+  } catch (error) {
+    if (error.statusCode === 404) {
+      return res.status(404).render('error', { status: 404, message: '这个项目案例不存在或尚未发布。' });
+    }
+    next(error);
+  }
+});
 
 app.use((req, res) => res.status(404).render('error', { status: 404, message: '你要找的页面不存在。' }));
 app.use((error, req, res, next) => {
@@ -127,6 +147,32 @@ app.use((error, req, res, next) => {
     message: error.publicMessage || '服务暂时不可用，请稍后再试。',
   });
 });
+
+async function recordPageVisit(req, fallbackViews) {
+  if (req.method === 'HEAD') return fallbackViews;
+  try {
+    const counted = await backendJson('/api/public/visits', {
+      method: 'POST', body: JSON.stringify({ path: req.path }),
+    }, req);
+    return counted.views;
+  } catch (error) {
+    console.error('visit tracking failed:', error.message);
+    return fallbackViews;
+  }
+}
+
+function renderMarkdown(markdown) {
+  const unsafe = marked.parse(markdown || '', { gfm: true, breaks: false });
+  return sanitizeHtml(unsafe, {
+    allowedTags: ['h1', 'h2', 'h3', 'h4', 'p', 'ul', 'ol', 'li', 'blockquote', 'pre', 'code',
+      'strong', 'em', 'del', 'a', 'hr', 'br', 'table', 'thead', 'tbody', 'tr', 'th', 'td'],
+    allowedAttributes: { a: ['href', 'title'] },
+    allowedSchemes: ['http', 'https', 'mailto'],
+    transformTags: {
+      a: (tagName, attribs) => ({ tagName, attribs: { ...attribs, rel: 'noopener noreferrer' } }),
+    },
+  });
+}
 
 function forwardedHeaders(req) {
   const headers = {
@@ -148,9 +194,7 @@ async function backendJson(apiPath, options, req) {
   headers.accept = 'application/json';
   if (options.body) headers['content-type'] = 'application/json';
   const response = await fetch(`${BACKEND_ORIGIN}${apiPath}`, {
-    ...options,
-    headers,
-    signal: AbortSignal.timeout(10000),
+    ...options, headers, signal: AbortSignal.timeout(10000),
   });
   const payload = await response.json().catch(() => null);
   if (!response.ok || !payload || payload.status !== 'success') {
@@ -181,7 +225,6 @@ async function readRequestBody(req) {
 const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`frontend listening on :${PORT}, backend=${BACKEND_ORIGIN}`);
 });
-
 for (const signal of ['SIGTERM', 'SIGINT']) {
   process.on(signal, () => server.close(() => process.exit(0)));
 }

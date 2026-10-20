@@ -103,9 +103,11 @@ public class PublicSiteController {
         }
     }
 
-    public record ProjectView(Long id, String name, String link, String description, List<String> meta) {
+    public record ProjectView(Long id, String slug, String name, String link, String description,
+                              List<String> meta, boolean detailPublished) {
         static ProjectView from(Project p) {
-            return new ProjectView(p.getId(), p.getName(), p.getLink(), p.getDescription(), List.copyOf(p.getMeta()));
+            return new ProjectView(p.getId(), p.getSlug(), p.getName(), p.getLink(), p.getDescription(),
+                    List.copyOf(p.getMeta()), p.isDetailPublished());
         }
     }
 

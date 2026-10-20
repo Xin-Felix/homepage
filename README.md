@@ -14,6 +14,7 @@
 - 深色 Bento 响应式主页与明暗主题；
 - 管理员账号 + 密码、Bearer token、IP 登录失败锁定；
 - 基本信息、经历、项目、联系方式后台管理；
+- 项目案例详情页、Markdown 编辑与安全预览；
 - 24 小时 IP 去重访问统计与访问日志；
 - 留言、限流、蜜罐反机器人和可选 SMTP 通知；
 - 前后端均设置 CSP、安全响应头和独立健康检查。
@@ -70,7 +71,7 @@ homepage/
 └── .env.example
 ```
 
-更详细的边界与请求链路见 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)，部署步骤见 [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)。
+更详细的边界与请求链路见 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)，部署步骤见 [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)，内容编辑说明见 [docs/CONTENT.md](docs/CONTENT.md)。
 
 ## 环境变量
 

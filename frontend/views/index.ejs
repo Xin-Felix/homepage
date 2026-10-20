@@ -67,7 +67,18 @@
   </section><% } %>
   <% if (site.projects.length) { %><section class="content-section section-anchor" id="projects" aria-labelledby="projects-title">
     <header class="section-header reveal"><div><span>03</span><p>SELECTED WORK / 项目</p></div><h2 id="projects-title">从想法到上线，<br><em>作品会替我继续说话。</em></h2></header>
-    <div class="project-grid"><% site.projects.forEach((project, index) => { const colorClass = index === 0 ? 'project-card--feature project-card--lime' : (index % 3 === 1 ? 'project-card--violet' : 'project-card--peach'); %><article class="project-card interactive-card reveal <%= colorClass %>"><div class="project-visual" aria-hidden="true"><div class="visual-toolbar"><i></i><i></i><i></i><span>PROJECT_0<%= index + 1 %></span></div><div class="visual-stage"><div class="visual-grid"></div><div class="visual-window"><span></span><span></span><span></span><div class="visual-code"><i></i><i></i><i></i><i></i></div></div><div class="project-glyph"><%= project.name.slice(0, 1) %></div><div class="visual-pulse"></div></div></div><div class="project-copy"><div class="project-meta-top"><span>CASE / 0<%= index + 1 %></span><% if (index === 0) { %><span>FEATURED</span><% } %></div><h3><%= project.name %></h3><% if (project.description) { %><p><%= project.description %></p><% } %><% if (project.meta.length) { %><div class="project-tags"><% for (const tag of project.meta) { %><span><%= tag %></span><% } %></div><% } %><% if (project.link) { %><a class="project-link" href="<%= project.link %>" target="_blank" rel="noopener"><span>查看项目</span><i aria-hidden="true">↗</i></a><% } %></div></article><% }) %></div>
+    <div class="project-grid">
+      <% site.projects.forEach((project, index) => {
+        const colorClass = index === 0 ? 'project-card--feature project-card--lime' : (index % 3 === 1 ? 'project-card--violet' : 'project-card--peach');
+        const detailHref = project.detailPublished && project.slug ? `/projects/${project.slug}` : project.link;
+        const external = !(project.detailPublished && project.slug);
+      %>
+      <article class="project-card interactive-card reveal <%= colorClass %>">
+        <div class="project-visual" aria-hidden="true"><div class="visual-toolbar"><i></i><i></i><i></i><span>PROJECT_0<%= index + 1 %></span></div><div class="visual-stage"><div class="visual-grid"></div><div class="visual-window"><span></span><span></span><span></span><div class="visual-code"><i></i><i></i><i></i><i></i></div></div><div class="project-glyph"><%= project.name.slice(0, 1) %></div><div class="visual-pulse"></div></div></div>
+        <div class="project-copy"><div class="project-meta-top"><span>CASE / 0<%= index + 1 %></span><% if (index === 0) { %><span>FEATURED</span><% } %></div><h3><%= project.name %></h3><% if (project.description) { %><p><%= project.description %></p><% } %><% if (project.meta.length) { %><div class="project-tags"><% for (const tag of project.meta) { %><span><%= tag %></span><% } %></div><% } %><% if (detailHref) { %><a class="project-link" href="<%= detailHref %>"<% if (external) { %> target="_blank" rel="noopener"<% } %>><span><%= external ? '查看项目' : '阅读案例' %></span><i aria-hidden="true">↗</i></a><% } %></div>
+      </article>
+      <% }) %>
+    </div>
   </section><% } %>
   <section class="content-section contact-section section-anchor" id="contact" aria-labelledby="contact-title">
     <header class="section-header reveal"><div><span>04</span><p>CONTACT / 联系我</p></div><h2 id="contact-title">如果你也在构建，<br><em>我们可以交换一些想法。</em></h2></header>

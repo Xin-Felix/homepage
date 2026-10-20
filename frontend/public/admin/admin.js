@@ -104,17 +104,22 @@
     },
     projects: {
       title: '开源与项目',
-      desc: '主页「开源与项目」里的卡片',
+      desc: '首页卡片与 Markdown 案例详情',
       noun: '项目',
       path: '/api/admin/projects',
       fields: [
         { key: 'name', label: '项目名称', required: true, max: 50 },
-        { key: 'link', label: '链接', type: 'url', max: 300, placeholder: 'https://github.com/…', hint: '可留空' },
-        { key: 'description', label: '描述', type: 'textarea', max: 1000 },
-        { key: 'meta', label: '卡片标签', type: 'list', placeholder: 'Java, 开源, 2020 — 2024', hint: '用逗号分隔，显示在卡片底部' },
+        { key: 'slug', label: '详情路径', max: 80, placeholder: 'product-migration', hint: '仅小写字母、数字和连字符；发布详情时必填' },
+        { key: 'link', label: '外部链接', type: 'url', max: 300, placeholder: 'https://github.com/…', hint: '可留空' },
+        { key: 'description', label: '卡片摘要', type: 'textarea', rows: 3, max: 1000 },
+        { key: 'role', label: '我的角色', max: 100, placeholder: '技术负责人' },
+        { key: 'period', label: '项目时间', max: 50, placeholder: '2025.05 — 2025.08' },
+        { key: 'meta', label: '卡片标签', type: 'list', placeholder: 'Java, 灰度迁移, 15,000+ 商品', hint: '用逗号分隔，显示在卡片和详情页' },
+        { key: 'contentMarkdown', label: '案例详情（Markdown）', type: 'textarea', rows: 16, max: 50000, hint: '支持标题、列表、引用、代码块、表格和链接' },
+        { key: 'detailPublished', label: '发布案例详情', type: 'checkbox' },
         VISIBLE_FIELD,
       ],
-      summary: (p) => ({ title: p.name, sub: p.link || (p.meta || []).join(' · ') }),
+      summary: (p) => ({ title: p.name, sub: p.slug ? `/projects/${p.slug}` : (p.link || '仅首页卡片') }),
     },
     contacts: {
       title: '联系方式',
@@ -371,13 +376,39 @@
     const cfg = RESOURCES[key];
     const dialog = $('#editor');
     const isNew = !item;
+    const isMarkdownEditor = key === 'projects';
+    dialog.classList.toggle('editor-wide', isMarkdownEditor);
+
     const submit = h('button', { type: 'submit', class: 'btn primary' }, '保存');
+    const cancel = h('button', { type: 'button', class: 'btn ghost', onclick: () => dialog.close() }, '取消');
+    const preview = isMarkdownEditor
+      ? h('section', { class: 'markdown-preview', hidden: true }, h('div', { class: 'muted' }, 'Markdown 预览'))
+      : null;
+    const previewButton = isMarkdownEditor
+      ? h('button', { type: 'button', class: 'btn' }, '预览 Markdown')
+      : null;
+    const actions = h('div', { class: 'form-actions' }, previewButton, cancel, submit);
     const form = h('form', { class: 'form' },
       h('h3', { id: 'editor-title' }, (isNew ? '新增' : '编辑') + cfg.noun),
-      buildFields(cfg.fields, item || {}),
-      h('div', { class: 'form-actions' },
-        h('button', { type: 'button', class: 'btn ghost', onclick: () => dialog.close() }, '取消'),
-        submit));
+      buildFields(cfg.fields, item || {}), preview, actions);
+
+    if (previewButton) {
+      previewButton.addEventListener('click', async () => {
+        previewButton.disabled = true;
+        try {
+          const markdown = form.elements.namedItem('contentMarkdown').value;
+          const data = await api('POST', '/admin/markdown-preview', { markdown });
+          // 服务端已经过 sanitize-html 白名单过滤，这里只用于受保护的编辑预览。
+          preview.innerHTML = data.html || '<p>暂无内容</p>';
+          preview.hidden = false;
+          preview.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        } catch (err) {
+          toast(err.message, 'error');
+        } finally {
+          previewButton.disabled = false;
+        }
+      });
+    }
 
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
