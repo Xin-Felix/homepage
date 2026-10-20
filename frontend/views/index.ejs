@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#0b0d0f" />
+<title><%= p.siteTitle %></title>
+<% if (p.description) { %><meta name="description" content="<%= p.description %>" /><% } %>
+<% if (p.keywords) { %><meta name="keywords" content="<%= p.keywords %>" /><% } %>
+<meta property="og:type" content="website" />
+<meta property="og:title" content="<%= p.siteTitle %>" />
+<% if (p.description) { %><meta property="og:description" content="<%= p.description %>" /><% } %>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+<link rel="stylesheet" href="/css/site.css" />
+<script src="/js/site.js"></script>
+</head>
+<body>
+<div class="scroll-progress" aria-hidden="true"><span id="scroll-progress-bar"></span></div>
+<div class="page-glow" aria-hidden="true"></div>
+<header class="header-shell">
+  <nav class="topbar" aria-label="主导航">
+    <a class="brand" href="#top" aria-label="回到页面顶部"><span class="brand-mark" aria-hidden="true">HX</span><span class="brand-copy"><strong><%= p.name %></strong><small>BACKEND ENGINEER</small></span></a>
+    <div class="desktop-nav"><a href="#about">关于</a><% if (site.experiences.length) { %><a href="#experience">经历</a><% } %><% if (site.projects.length) { %><a href="#projects">项目</a><% } %><a href="#contact">联系</a></div>
+    <div class="nav-actions">
+      <span class="status-pill"><i aria-hidden="true"></i>开放合适机会</span>
+      <button class="icon-button" id="theme-toggle" type="button" aria-label="切换明暗主题" title="切换明暗主题"><svg class="theme-icon theme-icon--moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"/></svg><svg class="theme-icon theme-icon--sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.66 6.34l1.41-1.41"/></svg></button>
+      <button class="icon-button menu-button" id="menu-toggle" type="button" aria-label="打开导航菜单" aria-expanded="false" aria-controls="mobile-menu"><span></span><span></span></button>
+    </div>
+  </nav>
+  <div class="mobile-menu" id="mobile-menu" hidden><a href="#about"><span>01</span>关于</a><% if (site.experiences.length) { %><a href="#experience"><span>02</span>经历</a><% } %><% if (site.projects.length) { %><a href="#projects"><span>03</span>项目</a><% } %><a href="#contact"><span>04</span>联系</a></div>
+</header>
+<main class="site-shell">
+  <section class="hero-grid section-anchor" id="top" aria-labelledby="hero-title">
+    <article class="bento-card hero-card interactive-card reveal">
+      <div class="card-no">PORTFOLIO / <%= year %></div>
+      <div class="hero-copy">
+        <div class="eyebrow"><span></span>JAVA BACKEND · HANGZHOU</div>
+        <h1 id="hero-title"><span class="hero-hello"><em><%= p.greeting %></em> <b><%= p.name %></b></span><span>让复杂系统</span><span>保持 <mark>可靠</mark> 与清晰。</span></h1>
+        <p><%= p.intro %></p>
+        <div class="hero-actions"><a class="button button--primary" href="#projects">查看项目 <span aria-hidden="true">↘</span></a><% if (p.messageEnabled) { %><button class="button button--ghost" type="button" data-open-contact>聊点什么 <span aria-hidden="true">↗</span></button><% } else { %><a class="button button--ghost" href="#contact">联系我 <span aria-hidden="true">↗</span></a><% } %></div>
+      </div>
+      <div class="system-orbit" aria-hidden="true"><div class="orbit orbit--one"><i></i></div><div class="orbit orbit--two"><i></i></div><div class="orbit-core">HX<span>JAVA</span></div><code class="orbit-label orbit-label--api">API</code><code class="orbit-label orbit-label--db">DB</code><code class="orbit-label orbit-label--mq">MQ</code></div>
+    </article>
+    <aside class="bento-card identity-card interactive-card reveal" aria-label="个人名片">
+      <div class="identity-top"><span>PROFILE / 001</span><span class="cross" aria-hidden="true">✦</span></div>
+      <div class="portrait" aria-hidden="true"><div class="portrait-grid"></div><div class="portrait-ring portrait-ring--one"></div><div class="portrait-ring portrait-ring--two"></div><div class="portrait-name"><%= p.name %></div><span class="code-chip code-chip--one">&lt;/&gt;</span><span class="code-chip code-chip--two">01</span></div>
+      <div class="identity-bottom"><div><small>ROLE</small><strong>Java 后端工程师</strong></div><span class="identity-arrow" aria-hidden="true">↗</span></div>
+    </aside>
+    <article class="bento-card signal-card interactive-card reveal">
+      <div class="signal-head"><span class="signal-label"><i></i> LOCAL SIGNAL</span><span>HZ / CN</span></div>
+      <div class="signal-location"><strong>杭州</strong><time id="hangzhou-time" datetime="">--:--:--</time></div>
+      <div class="mini-stats"><div><strong>4<span>+</span></strong><small>年工程经验</small></div><div><strong><%= site.projects.length %></strong><small>个公开项目</small></div><div><strong><%= views %></strong><small>次独立访问</small></div></div>
+    </article>
+    <% if (p.tags.length) { %><article class="bento-card stack-strip reveal" aria-label="技术栈"><div class="stack-title"><span>CORE STACK</span><i aria-hidden="true"></i></div><div class="marquee"><div class="marquee-track"><% for (const tag of p.tags) { %><span><%= tag %></span><% } %><% for (const tag of p.tags) { %><span aria-hidden="true"><%= tag %></span><% } %></div></div><div class="stack-end" aria-hidden="true">{ BUILD → SHIP }</div></article><% } %>
+  </section>
+  <section class="content-section section-anchor" id="about" aria-labelledby="about-title">
+    <header class="section-header reveal"><div><span>01</span><p>ABOUT / 关于我</p></div><h2 id="about-title">代码之外，<br><em>也在构建自己的坐标系。</em></h2></header>
+    <div class="about-grid">
+      <article class="bento-card about-story interactive-card reveal"><div class="card-no">BACKGROUND</div><div class="story-mark" aria-hidden="true">“</div><div class="story-copy"><% if (p.aboutParagraphs.length) { for (const paragraph of p.aboutParagraphs) { %><p><%= paragraph %></p><% }} else { %><p>保持好奇，持续构建。</p><% } %></div><div class="story-footer"><span>FROM SHAANXI</span><span>BASED IN HANGZHOU</span><span>SINCE 2000</span></div></article>
+      <article class="bento-card manifesto-card interactive-card reveal"><div class="manifesto-top"><span>ENGINEERING PRINCIPLES</span><span>03</span></div><ol><li><span>01</span><strong>SIMPLE</strong><small>先消除不必要的复杂度</small></li><li><span>02</span><strong>DIRECT</strong><small>让表达和代码一样直接</small></li><li><span>03</span><strong>LONG-TERM</strong><small>相信时间与复利</small></li></ol></article>
+      <article class="bento-card radar-card interactive-card reveal" aria-label="关注方向"><div class="card-no">CURRENT FOCUS</div><div class="radar" aria-hidden="true"><i class="radar-circle radar-circle--one"></i><i class="radar-circle radar-circle--two"></i><i class="radar-line"></i><span class="radar-dot radar-dot--one"></span><span class="radar-dot radar-dot--two"></span><b>FOCUS</b></div><div class="radar-tags"><span>商业化系统</span><span>实时风控</span><span>复杂系统迁移</span></div></article>
+    </div>
+  </section>
+  <% if (site.experiences.length) { %><section class="content-section section-anchor" id="experience" aria-labelledby="experience-title">
+    <header class="section-header reveal"><div><span>02</span><p>JOURNEY / 工作经历</p></div><h2 id="experience-title">一路构建，<br><em>一路把问题做深。</em></h2></header>
+    <div class="experience-list"><% site.experiences.forEach((experience, index) => { %><article class="experience-card interactive-card reveal"><div class="experience-index">0<%= index + 1 %></div><div class="experience-period"><%= experience.period %></div><div class="experience-role"><h3><%= experience.role %></h3><% if (experience.org) { %><p><span>@</span> <b><%= experience.org %></b></p><% } %></div><% if (experience.description) { %><p class="experience-desc"><%= experience.description %></p><% } %><div class="experience-mark" aria-hidden="true"><span></span><i></i></div></article><% }) %></div>
+  </section><% } %>
+  <% if (site.projects.length) { %><section class="content-section section-anchor" id="projects" aria-labelledby="projects-title">
+    <header class="section-header reveal"><div><span>03</span><p>SELECTED WORK / 项目</p></div><h2 id="projects-title">从想法到上线，<br><em>作品会替我继续说话。</em></h2></header>
+    <div class="project-grid"><% site.projects.forEach((project, index) => { const colorClass = index === 0 ? 'project-card--feature project-card--lime' : (index % 3 === 1 ? 'project-card--violet' : 'project-card--peach'); %><article class="project-card interactive-card reveal <%= colorClass %>"><div class="project-visual" aria-hidden="true"><div class="visual-toolbar"><i></i><i></i><i></i><span>PROJECT_0<%= index + 1 %></span></div><div class="visual-stage"><div class="visual-grid"></div><div class="visual-window"><span></span><span></span><span></span><div class="visual-code"><i></i><i></i><i></i><i></i></div></div><div class="project-glyph"><%= project.name.slice(0, 1) %></div><div class="visual-pulse"></div></div></div><div class="project-copy"><div class="project-meta-top"><span>CASE / 0<%= index + 1 %></span><% if (index === 0) { %><span>FEATURED</span><% } %></div><h3><%= project.name %></h3><% if (project.description) { %><p><%= project.description %></p><% } %><% if (project.meta.length) { %><div class="project-tags"><% for (const tag of project.meta) { %><span><%= tag %></span><% } %></div><% } %><% if (project.link) { %><a class="project-link" href="<%= project.link %>" target="_blank" rel="noopener"><span>查看项目</span><i aria-hidden="true">↗</i></a><% } %></div></article><% }) %></div>
+  </section><% } %>
+  <section class="content-section contact-section section-anchor" id="contact" aria-labelledby="contact-title">
+    <header class="section-header reveal"><div><span>04</span><p>CONTACT / 联系我</p></div><h2 id="contact-title">如果你也在构建，<br><em>我们可以交换一些想法。</em></h2></header>
+    <div class="contact-grid"><article class="bento-card contact-links-card reveal"><div class="card-no">FIND ME ONLINE</div><% if (site.contacts.length) { %><div class="contact-links"><% site.contacts.forEach((contact, index) => { if (contact.href) { %><a href="<%= contact.href %>"<% if (contact.external) { %> target="_blank" rel="noopener"<% } %>><span class="contact-index">0<%= index + 1 %></span><span class="contact-label"><small><%= contact.label %></small><strong><%= contact.text %></strong></span><i aria-hidden="true">↗</i></a><% } else { %><div class="contact-static"><span class="contact-index">0<%= index + 1 %></span><span class="contact-label"><small><%= contact.label %></small><strong><%= contact.text %></strong></span><i aria-hidden="true">·</i></div><% }}) %></div><% } %></article>
+      <article class="bento-card contact-cta interactive-card reveal"><div class="contact-orb" aria-hidden="true"><i></i><i></i><b>HELLO</b></div><div class="contact-cta-copy"><span>HAVE AN IDEA?</span><h3>LET'S<br><em>CONNECT.</em></h3><% if (p.messageEnabled) { %><button class="round-button" type="button" data-open-contact aria-label="打开留言表单">↗</button><% } else { %><a class="round-button" href="#contact" aria-label="查看联系方式">↗</a><% } %></div></article></div>
+  </section>
+</main>
+<footer class="footer"><div><span>© <%= year %> <%= p.footerText %></span><span>DESIGNED TO LAST · BUILT WITH JAVA</span></div><a href="#top">BACK TO TOP ↑</a></footer>
+<% if (p.messageEnabled) { %><dialog class="contact-dialog" id="contact-dialog" aria-labelledby="dialog-title"><div class="dialog-shell"><header class="dialog-head"><div><span>NEW MESSAGE</span><h2 id="dialog-title">聊点什么？</h2></div><button type="button" class="dialog-close" data-close-contact aria-label="关闭留言窗口">×</button></header><p class="dialog-intro">留言只有我能在后台看到。留下联系方式，我会尽快回复。</p><form id="msg-form" class="message-form"><div class="form-grid"><label><span>称呼 <i>*</i></span><input name="name" maxlength="30" required autocomplete="name" placeholder="怎么称呼你" /></label><label><span>联系方式</span><input name="contact" maxlength="100" autocomplete="email" placeholder="邮箱 / 微信（选填）" /></label></div><label><span>想说的话 <i>*</i></span><textarea name="content" rows="6" minlength="2" maxlength="1000" required placeholder="项目、技术，或者任何有意思的话题…"></textarea></label><div class="honeypot" aria-hidden="true"><label>网站<input name="website" tabindex="-1" autocomplete="off" /></label></div><div class="form-footer"><span class="msg-status" role="status" aria-live="polite"></span><button type="submit" class="button button--primary">发送消息 <span aria-hidden="true">↗</span></button></div></form></div></dialog><% } %>
+</body>
+</html>

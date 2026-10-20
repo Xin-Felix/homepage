@@ -2,6 +2,10 @@
 spring:
   application:
     name: homepage
+  web:
+    resources:
+      # 后端只提供 REST；页面和静态文件由 frontend 服务负责
+      add-mappings: false
   datasource:
     url: jdbc:h2:file:./data/homepage
     username: sa

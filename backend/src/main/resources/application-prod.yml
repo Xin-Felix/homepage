@@ -4,8 +4,6 @@ spring:
     url: ${DB_URL:jdbc:mysql://127.0.0.1:3306/homepage?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai}
     username: ${DB_USERNAME:root}
     password: ${DB_PASSWORD:}
-  thymeleaf:
-    cache: true
 
 server:
   # 部署在 Nginx 后面时，让 Tomcat 只信任内网代理传来的 X-Forwarded-For，限流按真实 IP 计算

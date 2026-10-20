@@ -37,7 +37,7 @@ public class SecurityHeadersFilter extends OncePerRequestFilter {
         response.setHeader("X-Frame-Options", "DENY");
         response.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
         String uri = request.getRequestURI();
-        if (uri.startsWith("/api/admin") || uri.startsWith("/admin")) {
+        if (uri.startsWith("/api/admin")) {
             response.setHeader("Cache-Control", "no-store");
             response.setHeader("X-Robots-Tag", "noindex, nofollow");
         }

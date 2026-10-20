@@ -1,16 +1,19 @@
-# 构建产物
-target/
+# Java / Maven
+**/target/
+backend/data/
 
-# 本地 H2 数据库文件
-data/
+# Node.js
+frontend/node_modules/
+frontend/.cache/
+frontend/coverage/
 
-# IDE
+# IDE / system
 .idea/
 *.iml
 .vscode/
 .DS_Store
 
-# 本地私密配置
+# Local secrets and logs
 .env
 *.local.yml
 application-local.yml
