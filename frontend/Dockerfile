@@ -5,7 +5,9 @@ RUN --mount=type=cache,target=/root/.npm npm ci --omit=dev
 
 FROM node:24.22.0-alpine
 ENV NODE_ENV=production PORT=3000
-RUN addgroup -g 10001 app && adduser -D -u 10001 -G app app
+RUN apk add --no-cache font-noto-cjk \
+    && addgroup -g 10001 app \
+    && adduser -D -u 10001 -G app app
 WORKDIR /app
 COPY --from=dependencies /app/node_modules ./node_modules
 COPY package.json ./

@@ -6,9 +6,7 @@
 <meta name="theme-color" content="#0b0d0f" />
 <title><%= project.name %> · <%= p.name %></title>
 <meta name="description" content="<%= project.description || project.name %>" />
-<meta property="og:type" content="article" />
-<meta property="og:title" content="<%= project.name %> · 项目案例" />
-<meta property="og:description" content="<%= project.description || project.name %>" />
+<%- include('partials/seo', { seo }) %>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 <link rel="stylesheet" href="/css/site.css" />
 <script src="/js/site.js"></script>

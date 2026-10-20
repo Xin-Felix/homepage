@@ -19,6 +19,7 @@
 - AI Lab 数据模型与后台管理，无公开项目时自动隐藏入口；
 - 24 小时 IP 去重访问统计、访问日志与 7/30/90 天图表看板；
 - 留言、限流、蜜罐反机器人和可选 SMTP 通知；
+- Canonical、JSON-LD、Sitemap、RSS 与动态 Open Graph PNG；
 - 前后端均设置 CSP、安全响应头和独立健康检查。
 
 ## 快速启动
@@ -73,7 +74,7 @@ homepage/
 └── .env.example
 ```
 
-更详细的边界与请求链路见 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)，部署步骤见 [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)，内容编辑说明见 [docs/CONTENT.md](docs/CONTENT.md)，统计口径见 [docs/ANALYTICS.md](docs/ANALYTICS.md)，后台安全与 TOTP 见 [docs/SECURITY.md](docs/SECURITY.md)。
+更详细的边界与请求链路见 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)，部署步骤见 [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)，内容编辑说明见 [docs/CONTENT.md](docs/CONTENT.md)，统计口径见 [docs/ANALYTICS.md](docs/ANALYTICS.md)，后台安全与 TOTP 见 [docs/SECURITY.md](docs/SECURITY.md)，搜索与分享配置见 [docs/SEO.md](docs/SEO.md)。
 
 ## 环境变量
 
@@ -121,4 +122,4 @@ TOTP 管理接口位于 `/api/admin/totp/status|setup|confirm|disable`，详细�
 
 ## License
 
-MIT，见 [LICENSE](LICENSE)。
+MIT，见 [LICENSE](LICENSE)。第三方运行依赖许可证见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。

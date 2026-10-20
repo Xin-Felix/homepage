@@ -8,7 +8,7 @@ cd homepage
 cp .env.example .env
 openssl rand -hex 32   # VISITOR_HASH_SALT
 openssl rand -hex 32   # TOTP_ENCRYPTION_KEY
-# 编辑 .env
+# 编辑 .env，并把 SITE_URL 改为最终 HTTPS 域名
 docker compose up -d --build
 ```
 

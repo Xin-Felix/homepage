@@ -1,6 +1,7 @@
 <!DOCTYPE html><html lang="zh-CN"><head>
 <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="theme-color" content="#0b0d0f" />
 <title><%= project.title %> · AI Lab · <%= p.name %></title><meta name="description" content="<%= project.summary %>" />
+<%- include('partials/seo', { seo }) %>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml" /><link rel="stylesheet" href="/css/site.css" /><script src="/js/site.js"></script>
 </head><body>
 <header class="detail-header"><a class="brand" href="/"><span class="brand-mark">HX</span><span class="brand-copy"><strong><%= p.name %></strong><small>AI LAB</small></span></a><div class="detail-actions"><a class="button button--ghost" href="/ai">← AI Lab</a><button class="icon-button" id="theme-toggle" type="button" aria-label="切换明暗主题"><svg class="theme-icon theme-icon--moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"/></svg><svg class="theme-icon theme-icon--sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.66 6.34l1.41-1.41"/></svg></button></div></header>

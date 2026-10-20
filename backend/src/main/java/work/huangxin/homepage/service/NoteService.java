@@ -57,11 +57,13 @@ public class NoteService {
 
     /** 公开详情每次 SSR 请求增加阅读量，然后返回最新数据。 */
     @Transactional
-    public Note getPublished(String slug) {
+    public Note getPublished(String slug, boolean increaseReadCount) {
         Note note = noteRepository.findBySlugAndPublishedTrue(slug)
                 .orElseThrow(() -> new NotFoundException("技术笔记不存在或尚未发布"));
-        noteRepository.incrementReadCount(note.getId());
-        note.setReadCount(note.getReadCount() + 1);
+        if (increaseReadCount) {
+            noteRepository.incrementReadCount(note.getId());
+            note.setReadCount(note.getReadCount() + 1);
+        }
         return note;
     }
 

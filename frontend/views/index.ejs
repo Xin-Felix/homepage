@@ -7,9 +7,7 @@
 <title><%= p.siteTitle %></title>
 <% if (p.description) { %><meta name="description" content="<%= p.description %>" /><% } %>
 <% if (p.keywords) { %><meta name="keywords" content="<%= p.keywords %>" /><% } %>
-<meta property="og:type" content="website" />
-<meta property="og:title" content="<%= p.siteTitle %>" />
-<% if (p.description) { %><meta property="og:description" content="<%= p.description %>" /><% } %>
+<%- include('partials/seo', { seo }) %>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 <link rel="stylesheet" href="/css/site.css" />
 <script src="/js/site.js"></script>

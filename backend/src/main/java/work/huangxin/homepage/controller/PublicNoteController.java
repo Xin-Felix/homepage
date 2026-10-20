@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -30,8 +31,10 @@ public class PublicNoteController {
 
     @GetMapping("/{slug}")
     @RateLimit(RateLimit.CHEAP)
-    public ApiResponse<NoteDetail> detail(@PathVariable("slug") String slug, HttpServletRequest request) {
-        return ApiResponse.ok(NoteDetail.from(noteService.getPublished(slug)));
+    public ApiResponse<NoteDetail> detail(@PathVariable("slug") String slug,
+                                          @RequestParam(name = "count", defaultValue = "true") boolean count,
+                                          HttpServletRequest request) {
+        return ApiResponse.ok(NoteDetail.from(noteService.getPublished(slug, count)));
     }
 
     public record NoteSummary(Long id, String slug, String title, String summary, List<String> tags,
