@@ -69,4 +69,8 @@ Nuxt SSR 的内部 `$fetch` 没有 socket peer，因此根请求中间件先解�
 
 ## 数据持久化
 
-Compose 项目名保持 `homepage`，MySQL 命名卷保持 `homepage_mysql-data`。Nuxt 迁移不改变 Spring API、数据库 schema 或卷名。backend 目前使用 Hibernate `ddl-auto=update` 管理小规模 schema；正式演进到复杂迁移时应引入 Flyway。
+Compose 项目名保持 `homepage`，MySQL 命名卷保持 `homepage_mysql-data`。Nuxt 迁移不改变 Spring API、数据库 schema 或卷名。
+
+backend 使用 Hibernate `ddl-auto=update` 管理小规模 schema；`backend/src/main/resources/db/homepage-seed.sql` 保存新数据库的 Profile、经历、项目案例和联系方式默认值，由 `DataInitializer` 在 `profile.id=1` 不存在时执行。`db/content-updates/` 中的脚本只匹配上一版默认文案，用于幂等升级已有库；通过后台修改过的内容不会被覆盖。
+
+正式演进到复杂结构迁移或多实例部署时，应将 schema 和版本化内容迁移统一交给 Flyway。

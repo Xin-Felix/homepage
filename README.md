@@ -11,7 +11,7 @@
 
 ## 当前能力
 
-- 深色 Bento 响应式主页、明暗主题与 Vue 可复用区块；
+- 克制的深色技术履历主页、明暗主题与 Vue 可复用区块；
 - Nuxt SSR、路由级 SEO、客户端 hydration 和统一错误页；
 - Vue 管理后台、管理员账号 + 密码、Bearer token、IP 登录失败锁定与可选 TOTP；
 - 基本信息、经历、项目、联系方式后台管理；
@@ -75,8 +75,9 @@ homepage/
 │   │   ├── repository/             # Spring Data JPA
 │   │   ├── service/                # 业务逻辑
 │   │   ├── ratelimit/              # Bucket4j 与登录锁定
-│   │   └── config/                 # 配置、安全头、初始数据
+│   │   └── config/                 # 配置、安全头、SQL 初始化入口
 │   ├── src/main/resources/
+│   │   └── db/                     # 新库 seed 与幂等内容升级 SQL
 │   ├── Dockerfile
 │   └── pom.xml
 ├── docs/                           # 架构、内容、安全、SEO 与部署文档

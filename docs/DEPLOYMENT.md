@@ -29,11 +29,15 @@ curl -I http://127.0.0.1:8080/og/home.png # 应为 200 image/png
 
 ## 更新
 
+更新前先按下方“数据备份”生成 MySQL 备份，再执行：
+
 ```bash
 git pull
 docker compose up -d --build frontend backend
 docker compose ps
 ```
+
+backend 启动时会检查 `db/content-updates/`：只有仍与上一版仓库默认文案一致的字段才会升级，后台自行编辑过的内容不会被覆盖，也不会重置访问数、排序或显隐状态。
 
 只修改 Vue/Nuxt 前端时可单独更新，不重建 backend 或 MySQL：
 

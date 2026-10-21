@@ -1,5 +1,15 @@
 # 内容管理
 
+## 默认内容与升级
+
+- `backend/src/main/resources/db/homepage-seed.sql` 是新数据库的主页默认内容，包含 Profile、经历、项目卡片、项目 Markdown 和联系方式；
+- backend 在 Hibernate 建表后检查 `profile.id=1`，只有全新数据库才执行完整 seed；
+- `db/content-updates/` 保存已有库的一次性内容更新，每条 SQL 都带旧默认值条件，后台已编辑的字段不会被覆盖；
+- 默认 SQL 不会重置访问数、排序、显隐、发布状态或管理员数据；
+- 默认技术笔记仍由 `NoteInitializer` 在笔记表为空时创建，AI Lab 不自动生成任何项目。
+
+线上更新前仍应按部署文档备份 MySQL。后续日常内容维护统一使用管理后台，不直接修改 SQL。
+
 ## 项目案例
 
 后台进入“开源与项目”，每个项目同时包含首页卡片和可选详情页。
