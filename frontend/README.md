@@ -18,6 +18,7 @@
 - 公开页面使用 Nuxt SSR，`useAsyncData` payload 在 hydration 时复用，不重复访问 backend；
 - SSR 内部 BFF 请求只继承根请求中间件已校验的 IP、方法、协议和客户端元数据；
 - 根 `HEAD` 请求不产生访问或阅读副作用；
+- 主题在没有手动偏好时实时跟随 `prefers-color-scheme`，用户点击后由 `localStorage` 持久化覆盖；
 - 后台仅在客户端渲染，Bearer token 只进入 `sessionStorage`，不会写入 HTML 或 SSR payload；
 - 原始 Markdown 只在服务端通过 `marked` 解析并由 `sanitize-html` 白名单清洗；
 - CSP nonce 由 `nuxt-security` 按请求生成，脚本策略不启用 `unsafe-inline`；

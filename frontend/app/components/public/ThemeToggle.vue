@@ -1,5 +1,10 @@
 <script setup lang="ts">
-const { isLight, toggleTheme } = usePublicTheme()
+const { isLight, followsSystem, toggleTheme } = usePublicTheme()
+
+const label = computed(() => isLight.value ? '切换为深色主题' : '切换为浅色主题')
+const hint = computed(() => followsSystem.value
+  ? `当前跟随系统，${label.value}`
+  : `当前为手动主题，${label.value}`)
 </script>
 
 <template>
@@ -7,8 +12,8 @@ const { isLight, toggleTheme } = usePublicTheme()
     id="theme-toggle"
     class="icon-button"
     type="button"
-    :aria-label="isLight ? '切换为深色主题' : '切换为浅色主题'"
-    title="切换明暗主题"
+    :aria-label="label"
+    :title="hint"
     @click="toggleTheme"
   >
     <svg class="theme-icon theme-icon--moon" viewBox="0 0 24 24" aria-hidden="true">

@@ -1,13 +1,19 @@
 <script setup lang="ts">
-// 在 CSS 与页面绘制前恢复主题，避免浅色用户看到深色闪烁。
+// 在 CSS 与页面绘制前恢复手动主题；没有手动值时使用系统偏好，避免首屏闪烁。
 const themeBootstrap = `(() => {
   const root = document.documentElement;
   root.classList.add('js');
+  const systemTheme = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+  let savedTheme = null;
   try {
-    root.dataset.theme = localStorage.getItem('homepage.theme') === 'light' ? 'light' : 'dark';
-  } catch (_) {
-    root.dataset.theme = 'dark';
-  }
+    const saved = localStorage.getItem('homepage.theme');
+    if (saved === 'light' || saved === 'dark') savedTheme = saved;
+  } catch (_) {}
+  const theme = savedTheme || systemTheme;
+  root.dataset.theme = theme;
+  root.dataset.themePreference = savedTheme ? 'manual' : 'system';
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.content = theme === 'light' ? '#f4f3ed' : '#0b0d0f';
 })();`
 
 useHead({
