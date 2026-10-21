@@ -1,6 +1,7 @@
 package work.huangxin.homepage.config;
 
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 import javax.sql.DataSource;
 
@@ -19,7 +20,7 @@ import work.huangxin.homepage.repository.ProfileRepository;
 
 /**
  * 在 Hibernate 建表后执行 SQL 内容初始化。
- * 新库只执行完整 seed；已有库只执行带旧值前置条件的幂等内容更新，不覆盖后台自定义内容。
+ * 新库先执行完整 seed；后续脚本只做幂等新增或带旧值条件的更新，不覆盖后台自定义内容。
  */
 @Slf4j
 @Component
@@ -27,7 +28,9 @@ import work.huangxin.homepage.repository.ProfileRepository;
 public class DataInitializer implements ApplicationRunner {
 
     private static final String SEED_SCRIPT = "db/homepage-seed.sql";
-    private static final String RESUME_REFRESH_SCRIPT = "db/content-updates/2026-10-resume-refresh.sql";
+    private static final List<String> CONTENT_UPDATE_SCRIPTS = List.of(
+            "db/content-updates/2026-10-resume-refresh.sql",
+            "db/content-updates/2026-10-fashion-item-matcher-ai.sql");
 
     private final ProfileRepository profileRepository;
     private final DataSource dataSource;
@@ -40,8 +43,9 @@ public class DataInitializer implements ApplicationRunner {
             execute(SEED_SCRIPT);
         }
 
-        // 脚本只匹配仓库上一版默认文案；管理员已经改过的行不会命中。
-        execute(RESUME_REFRESH_SCRIPT);
+        for (String script : CONTENT_UPDATE_SCRIPTS) {
+            execute(script);
+        }
     }
 
     private void execute(String classpathLocation) {
