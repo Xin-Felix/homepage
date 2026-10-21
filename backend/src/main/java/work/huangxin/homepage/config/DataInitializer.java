@@ -30,7 +30,8 @@ public class DataInitializer implements ApplicationRunner {
     private static final String SEED_SCRIPT = "db/homepage-seed.sql";
     private static final List<String> CONTENT_UPDATE_SCRIPTS = List.of(
             "db/content-updates/2026-10-resume-refresh.sql",
-            "db/content-updates/2026-10-fashion-item-matcher-ai.sql");
+            "db/content-updates/2026-10-fashion-item-matcher-ai.sql",
+            "db/content-updates/2026-10-rebate-case-study.sql");
 
     private final ProfileRepository profileRepository;
     private final DataSource dataSource;
