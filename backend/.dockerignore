@@ -1,4 +1,5 @@
-# 构建镜像只需要 pom.xml 和 src/
+# 构建镜像只需要 pom.xml 和全部 src 内容。
 *
 !pom.xml
 !src/
+!src/**

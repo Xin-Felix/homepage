@@ -32,7 +32,8 @@ public class DataInitializer implements ApplicationRunner {
             "db/content-updates/2026-10-resume-refresh.sql",
             "db/content-updates/2026-10-fashion-item-matcher-ai.sql",
             "db/content-updates/2026-10-rebate-case-study.sql",
-            "db/content-updates/2026-10-trading-tools-case-study.sql");
+            "db/content-updates/2026-10-trading-tools-case-study.sql",
+            "db/content-updates/2026-10-ying-plus-ai-project.sql");
 
     private final ProfileRepository profileRepository;
     private final DataSource dataSource;
