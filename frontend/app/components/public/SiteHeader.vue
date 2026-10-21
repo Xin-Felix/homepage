@@ -15,30 +15,25 @@ const route = useRoute()
 const menuOpen = ref(false)
 
 const desktopLinks = computed(() => [
-  { to: '#about', label: '关于' },
   ...(props.hasExperiences ? [{ to: '#experience', label: '经历' }] : []),
   ...(props.hasProjects ? [{ to: '#projects', label: '项目' }] : []),
+  { to: '#about', label: '关于' },
   { to: '/notes', label: '笔记' },
   ...(props.hasAi ? [{ to: '#ai-lab', label: 'AI Lab' }] : []),
   { to: '#contact', label: '联系' },
 ])
 
-// 保留旧站条件区块隐藏时的固定编号规则。
-const mobileLinks = computed(() => [
-  { number: '01', to: '#about', label: '关于' },
-  ...(props.hasExperiences ? [{ number: '02', to: '#experience', label: '经历' }] : []),
-  ...(props.hasProjects ? [{ number: '03', to: '#projects', label: '项目' }] : []),
-  { number: '04', to: '/notes', label: '笔记' },
-  ...(props.hasAi ? [{ number: '05', to: '#ai-lab', label: 'AI Lab' }] : []),
-  { number: props.hasAi ? '06' : '05', to: '#contact', label: '联系' },
-])
+const mobileLinks = computed(() => desktopLinks.value.map((link, index) => ({
+  ...link,
+  number: String(index + 1).padStart(2, '0'),
+})))
 
 const closeMenu = () => {
   menuOpen.value = false
 }
 
 const onResize = () => {
-  if (window.innerWidth > 760) closeMenu()
+  if (window.innerWidth > 1080) closeMenu()
 }
 
 watch(menuOpen, (open) => {

@@ -61,11 +61,12 @@ const openContact = () => contactDialog.value?.open()
       :profile="profile"
       :project-count="site.projects.length"
       :views="page.views"
+      :has-experiences="site.experiences.length > 0"
       @open-contact="openContact"
     />
-    <HomeAbout :profile="profile" />
     <HomeExperience v-if="site.experiences.length" :experiences="site.experiences" />
     <HomeProjects v-if="site.projects.length" :projects="site.projects" />
+    <HomeAbout :profile="profile" />
     <HomeAiLab v-if="aiProjects.length" :projects="aiProjects" />
     <HomeContact
       :contacts="site.contacts"

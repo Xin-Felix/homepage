@@ -51,8 +51,12 @@ const emit = defineEmits<{ openContact: [] }>()
             type="button"
             aria-label="打开留言表单"
             @click="emit('openContact')"
-          >↗</button>
-          <NuxtLink v-else class="round-button" to="#contact" aria-label="查看联系方式">↗</NuxtLink>
+          >
+            <span>给我留言</span><i aria-hidden="true">↗</i>
+          </button>
+          <NuxtLink v-else class="round-button" to="#contact" aria-label="查看联系方式">
+            <span>查看联系方式</span><i aria-hidden="true">↗</i>
+          </NuxtLink>
         </div>
       </article>
     </div>

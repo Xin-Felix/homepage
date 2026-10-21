@@ -7,7 +7,7 @@ defineProps<{ profile: PublicProfile }>()
 
 <template>
   <section id="about" class="content-section section-anchor" aria-labelledby="about-title">
-    <SectionHeading number="01" kicker="ABOUT / 关于我" title-id="about-title">
+    <SectionHeading number="03" kicker="ABOUT / 关于我" title-id="about-title">
       代码之外，<br><em>也在构建自己的坐标系。</em>
     </SectionHeading>
     <div class="about-grid">

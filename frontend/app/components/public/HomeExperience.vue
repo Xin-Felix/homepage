@@ -7,7 +7,7 @@ defineProps<{ experiences: PublicExperience[] }>()
 
 <template>
   <section id="experience" class="content-section section-anchor" aria-labelledby="experience-title">
-    <SectionHeading number="02" kicker="JOURNEY / 工作经历" title-id="experience-title">
+    <SectionHeading number="01" kicker="JOURNEY / 工作经历" title-id="experience-title">
       一路构建，<br><em>一路把问题做深。</em>
     </SectionHeading>
     <div class="experience-list">

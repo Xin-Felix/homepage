@@ -17,7 +17,7 @@ const projectHref = (project: PublicProjectSummary) => hasInternalDetail(project
 
 <template>
   <section id="projects" class="content-section section-anchor" aria-labelledby="projects-title">
-    <SectionHeading number="03" kicker="SELECTED WORK / 项目" title-id="projects-title">
+    <SectionHeading number="02" kicker="SELECTED WORK / 项目" title-id="projects-title">
       从想法到上线，<br><em>作品会替我继续说话。</em>
     </SectionHeading>
     <div class="project-grid">

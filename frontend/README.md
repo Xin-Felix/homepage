@@ -5,7 +5,7 @@
 ## 目录职责
 
 - `app/pages/`：公开页和 `/admin/` 文件路由；
-- `app/components/public/`：Bento 首页、详情页、Markdown、主题和留言组件；
+- `app/components/public/`：技术履历首页、详情页、Markdown、主题和留言组件；
 - `app/components/admin/`：后台 Shell、通用资源编辑器、统计、留言和 TOTP 组件；
 - `app/composables/`：SSR 页面数据、SEO、公开交互、后台会话和 API；
 - `server/api/page/`：面向页面的 BFF 聚合端点；
