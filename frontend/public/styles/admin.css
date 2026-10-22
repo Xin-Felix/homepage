@@ -394,6 +394,8 @@
 .admin-visit { padding: 17px 19px; }
 .admin-visit-head { display: flex; align-items: center; flex-wrap: wrap; gap: 9px; }
 .admin-visit-head strong { font-size: 16px; }
+.admin-visit-ip { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-variant-numeric: tabular-nums; }
+.admin-badge.is-history { color: var(--admin-warning); background: #fff3df; }
 .admin-visit-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 24px; margin-top: 15px; padding-top: 14px; border-top: 1px solid var(--admin-line); }
 .admin-visit-grid > div { min-width: 0; }
 .admin-visit-grid dt { margin-bottom: 3px; color: var(--admin-muted); font-size: 12px; }

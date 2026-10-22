@@ -30,13 +30,17 @@ public interface VisitLogRepository extends JpaRepository<VisitLog, Long> {
                set v.hits = v.hits + 1,
                    v.lastVisitedAt = :visitedAt,
                    v.userAgent = coalesce(:userAgent, v.userAgent),
-                   v.referer = coalesce(:referer, v.referer)
+                   v.referer = coalesce(:referer, v.referer),
+                   v.ipAddress = coalesce(v.ipAddress, :ipAddress),
+                   v.region = coalesce(v.region, :region)
              where v.id = :id
             """)
     int touch(@Param("id") Long id,
               @Param("visitedAt") LocalDateTime visitedAt,
               @Param("userAgent") String userAgent,
-              @Param("referer") String referer);
+              @Param("referer") String referer,
+              @Param("ipAddress") String ipAddress,
+              @Param("region") String region);
 
     Page<VisitLog> findAllByOrderByIdDesc(Pageable pageable);
 

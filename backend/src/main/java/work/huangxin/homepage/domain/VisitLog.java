@@ -25,7 +25,8 @@ import lombok.Setter;
 @Entity
 @Table(name = "visit_log", indexes = {
         @Index(name = "idx_visit_log_ip_hash", columnList = "ip_hash"),
-        @Index(name = "idx_visit_log_first_at", columnList = "first_visited_at")
+        @Index(name = "idx_visit_log_first_at", columnList = "first_visited_at"),
+        @Index(name = "idx_visit_log_last_at", columnList = "last_visited_at")
 })
 public class VisitLog {
 
@@ -33,14 +34,24 @@ public class VisitLog {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /** 使用服务端盐值计算的 SHA-256 指纹，不保存明文 IP。 */
+    /** 使用服务端盐值计算的 SHA-256 指纹，供 24 小时去重，不经 admin API 输出完整值。 */
     @JsonIgnore
     @Column(name = "ip_hash", nullable = false, length = 64)
     private String ipHash;
 
-    /** 供管理员辨别来源网段，如 203.0.113.*。 */
+    /** 历史兼容字段：保留脱敏网段，旧记录无法恢复为完整 IP。 */
+    @JsonIgnore
     @Column(name = "ip_masked", nullable = false, length = 64)
     private String ipMasked;
+
+    /** 新记录保存可信代理链解析后的完整数值 IP；仅管理员访问日志 API 可见。 */
+    @JsonIgnore
+    @Column(name = "ip_address", length = 45)
+    private String ipAddress;
+
+    /** 新记录创建时通过本地离线库查询的国家 / 省市快照。 */
+    @Column(length = 128)
+    private String region;
 
     @Column(nullable = false, length = 100)
     private String path;

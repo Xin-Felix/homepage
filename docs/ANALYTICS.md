@@ -17,4 +17,14 @@
 
 数据仅来自自建 `visit_log` 表，不加载第三方统计脚本。Referer 只保留站点 origin，User-Agent 只保留浏览器、系统和设备类型。日志超过 `VISITOR_LOG_RETENTION` 后自动删除，但历史累计访问数不减少。
 
-聚合接口：`GET /api/admin/analytics?days=7|30|90`，受后台 Bearer token 保护。
+## 完整 IP 与地区
+
+本项目按管理员明确要求，为**新建访问日志**保存可信代理链解析后的完整数值 IP，并在创建时通过随 backend 镜像发布的 ip2region 离线 XDB 数据快照写入国家 / 省市地区。查询过程不向第三方发送访客 IP。
+
+- 完整 IP、地区和加盐去重指纹仅通过登录后的 `/api/admin/visits` 返回；该接口已有 Bearer token、`no-store` 与 `noindex` 保护；
+- 完整 IP 不进入公开页面、Nuxt SSR payload、RSS、Sitemap、动态分享图或应用日志；
+- 历史日志只有不可逆的脱敏网段与加盐摘要，后台会标记为“历史脱敏”，不能也不会反推出完整 IP 或地区；
+- 地区是创建记录时的离线快照；地区库更新不会重写历史日志；
+- MySQL 备份会包含新字段，应和管理员凭据一样限制访问；保留期仍由 `VISITOR_LOG_RETENTION` 控制。
+
+聚合接口：`GET /api/admin/analytics?days=7|30|90`，访问日志接口：`GET /api/admin/visits?page=0&size=20`，均受后台 Bearer token 保护。

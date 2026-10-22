@@ -12,7 +12,7 @@ openssl rand -hex 32   # TOTP_ENCRYPTION_KEY
 docker compose up -d --build
 ```
 
-前端 Dockerfile 使用固定 Node.js 镜像、`package-lock.json` 和 `npm ci`，先执行 `nuxt typecheck` 再构建 Nuxt `.output`；宿主机无需安装 Node.js、JDK、Maven 或 MySQL。
+前端 Dockerfile 使用固定 Node.js 镜像、`package-lock.json` 和 `npm ci`，先执行 `nuxt typecheck` 再构建 Nuxt `.output`；backend 镜像同时携带 IPv4/IPv6 离线地区数据快照。宿主机无需安装 Node.js、JDK、Maven 或 MySQL。
 
 检查：
 

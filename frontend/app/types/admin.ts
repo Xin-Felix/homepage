@@ -220,6 +220,13 @@ export interface AdminPageResult<T> {
 
 export interface AdminVisit {
   id: number
+  /** 完整 IP 仅对后台认证会话返回；旧记录为 null。 */
+  ipAddress: string | null
+  /** 创建访问记录时写入的离线地区快照；旧记录可能没有。 */
+  region: string | null
+  /** 历史脱敏记录无法恢复完整 IP。 */
+  historicalMasked: boolean
+  /** 兼容字段：新记录等于 ipAddress，旧记录为脱敏网段。 */
   source: string
   fingerprint: string
   path: string

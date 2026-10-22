@@ -58,7 +58,7 @@ Nuxt SSR 的内部 `$fetch` 没有 socket peer，因此根请求中间件先解�
 - `/admin` 精确 302 到 `/admin/`；所有后台页面和预览接口都设置 `no-store`、`noindex`；
 - backend 对 `/api/admin/**` 统一验证 Bearer token，管理员失败登录按 IP 原子计数并锁定；
 - token 只保存在当前标签页 `sessionStorage`，TOTP secret 只在 backend 加密存储；
-- IP 只以脱敏网段和独立盐值摘要记录。
+- 完整 IP 与创建时离线解析的地区快照仅存入后台访问日志，admin API 受 Bearer token 和 no-store 保护；旧脱敏日志无法反推完整 IP。
 
 ## SEO、订阅和动态图片
 

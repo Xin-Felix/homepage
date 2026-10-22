@@ -31,20 +31,25 @@ import work.huangxin.homepage.repository.VisitLogRepository;
 public class VisitService {
 
     private static final int MAX_PATH = 100;
+    private static final int MAX_IP_ADDRESS = 45;
+    private static final int MAX_REGION = 128;
     private static final String DEVELOPMENT_SALT = "homepage-development-only-salt";
 
     private final VisitLogRepository visitLogRepository;
     private final ProfileRepository profileRepository;
+    private final IpRegionService ipRegionService;
     private final Duration uniqueWindow;
     private final Duration logRetention;
     private final String hashSalt;
 
     public VisitService(VisitLogRepository visitLogRepository,
                         ProfileRepository profileRepository,
+                        IpRegionService ipRegionService,
                         HomepageProperties properties,
                         Environment environment) {
         this.visitLogRepository = visitLogRepository;
         this.profileRepository = profileRepository;
+        this.ipRegionService = ipRegionService;
         this.uniqueWindow = properties.views().uniqueWindow();
         this.logRetention = properties.views().logRetention();
         if (uniqueWindow.isZero() || uniqueWindow.isNegative()) {
@@ -74,12 +79,14 @@ public class VisitService {
         LocalDateTime now = LocalDateTime.now();
         String ip = StringUtils.hasText(request.ip()) ? request.ip() : "unknown";
         String ipHash = ClientIp.sha256Hex(hashSalt + '\0' + ip);
+        String ipAddress = limitNullable(ipRegionService.normalize(ip), MAX_IP_ADDRESS);
+        String region = limitNullable(ipRegionService.lookup(ipAddress), MAX_REGION);
         String userAgent = classifyUserAgent(request.userAgent());
         String referer = normalizeReferer(request.referer());
 
         VisitLog latest = visitLogRepository.findFirstByIpHashOrderByIdDesc(ipHash).orElse(null);
         if (isWithinWindow(latest, now)) {
-            touch(latest.getId(), now, userAgent, referer);
+            touch(latest.getId(), now, userAgent, referer, ipAddress, region);
             return currentViews();
         }
 
@@ -88,13 +95,16 @@ public class VisitService {
                 .orElseThrow(() -> new IllegalStateException("主页资料不存在，无法记录访问量"));
         latest = visitLogRepository.findTopByIpHashOrderByIdDesc(ipHash).orElse(null);
         if (isWithinWindow(latest, now)) {
-            touch(latest.getId(), now, userAgent, referer);
+            touch(latest.getId(), now, userAgent, referer, ipAddress, region);
             return profile.getViews();
         }
 
         VisitLog logEntry = new VisitLog();
         logEntry.setIpHash(ipHash);
+        // 脱敏列保留给历史兼容与内部指纹排查；后台展示优先使用 ipAddress。
         logEntry.setIpMasked(ClientIp.mask(ip));
+        logEntry.setIpAddress(ipAddress);
+        logEntry.setRegion(region);
         logEntry.setPath(limit(request.path(), MAX_PATH));
         logEntry.setUserAgent(userAgent);
         logEntry.setReferer(referer);
@@ -128,8 +138,9 @@ public class VisitService {
         return logEntry != null && logEntry.getFirstVisitedAt().plus(uniqueWindow).isAfter(now);
     }
 
-    private void touch(Long id, LocalDateTime now, String userAgent, String referer) {
-        if (visitLogRepository.touch(id, now, userAgent, referer) != 1) {
+    private void touch(Long id, LocalDateTime now, String userAgent, String referer,
+                       String ipAddress, String region) {
+        if (visitLogRepository.touch(id, now, userAgent, referer, ipAddress, region) != 1) {
             throw new IllegalStateException("访问日志更新失败");
         }
     }
@@ -193,13 +204,22 @@ public class VisitService {
         return normalized.length() <= maxLength ? normalized : normalized.substring(0, maxLength);
     }
 
+    private static String limitNullable(String value, int maxLength) {
+        if (!StringUtils.hasText(value)) return null;
+        String normalized = value.trim();
+        return normalized.length() <= maxLength ? normalized : normalized.substring(0, maxLength);
+    }
+
     public record VisitRequest(String ip, String path, String userAgent, String referer) {
     }
 
-    /** 白名单 DTO：后台不会拿到完整 IP 指纹。 */
+    /** 仅认证后的后台 API 返回完整 IP；旧记录会回退为不可逆的历史脱敏网段。 */
     public record VisitLogItem(
             Long id,
             String source,
+            String ipAddress,
+            String region,
+            boolean historicalMasked,
             String fingerprint,
             String path,
             String userAgent,
@@ -209,9 +229,12 @@ public class VisitService {
             LocalDateTime lastVisitedAt) {
 
         static VisitLogItem from(VisitLog log) {
+            String ipAddress = log.getIpAddress();
+            boolean historicalMasked = !StringUtils.hasText(ipAddress);
+            String source = historicalMasked ? log.getIpMasked() : ipAddress;
             String fingerprint = log.getIpHash().substring(0, Math.min(10, log.getIpHash().length()));
-            return new VisitLogItem(log.getId(), log.getIpMasked(), fingerprint, log.getPath(),
-                    log.getUserAgent(), log.getReferer(), log.getHits(),
+            return new VisitLogItem(log.getId(), source, ipAddress, log.getRegion(), historicalMasked,
+                    fingerprint, log.getPath(), log.getUserAgent(), log.getReferer(), log.getHits(),
                     log.getFirstVisitedAt(), log.getLastVisitedAt());
         }
     }
