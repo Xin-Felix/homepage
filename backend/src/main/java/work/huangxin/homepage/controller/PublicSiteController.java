@@ -16,6 +16,7 @@ import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import work.huangxin.homepage.common.ApiResponse;
 import work.huangxin.homepage.common.ClientIp;
+import work.huangxin.homepage.common.SiteLang;
 import work.huangxin.homepage.domain.ContactLink;
 import work.huangxin.homepage.domain.Experience;
 import work.huangxin.homepage.domain.Profile;
@@ -44,7 +45,7 @@ public class PublicSiteController {
     @RateLimit(RateLimit.CHEAP)
     public ResponseEntity<ApiResponse<PublicHome>> home(HttpServletRequest request) {
         SiteData site = siteService.getSiteData();
-        PublicHome payload = PublicHome.from(site, siteService.getViewCount());
+        PublicHome payload = PublicHome.from(site, siteService.getViewCount(), SiteLang.from(request));
         return ResponseEntity.ok()
                 .cacheControl(CacheControl.noCache())
                 .body(ApiResponse.ok(payload));
@@ -75,12 +76,12 @@ public class PublicSiteController {
             List<ContactView> contacts,
             long views) {
 
-        static PublicHome from(SiteData site, long views) {
+        static PublicHome from(SiteData site, long views, SiteLang lang) {
             return new PublicHome(
-                    ProfileView.from(site.profile()),
-                    site.experiences().stream().map(ExperienceView::from).toList(),
-                    site.projects().stream().map(ProjectView::from).toList(),
-                    site.contacts().stream().map(ContactView::from).toList(),
+                    ProfileView.from(site.profile(), lang),
+                    site.experiences().stream().map(e -> ExperienceView.from(e, lang)).toList(),
+                    site.projects().stream().map(p -> ProjectView.from(p, lang)).toList(),
+                    site.contacts().stream().map(c -> ContactView.from(c, lang)).toList(),
                     views);
         }
     }
@@ -90,30 +91,47 @@ public class PublicSiteController {
             String greeting, String intro, List<String> tags,
             List<String> aboutParagraphs, String footerText, boolean messageEnabled) {
 
-        static ProfileView from(Profile p) {
-            return new ProfileView(p.getName(), p.getSiteTitle(), p.getDescription(), p.getKeywords(),
-                    p.getGreeting(), p.getIntro(), List.copyOf(p.getTags()), p.getAboutParagraphs(),
-                    p.getFooterText(), p.isMessageEnabled());
+        static ProfileView from(Profile p, SiteLang lang) {
+            return new ProfileView(
+                    lang.pick(p.getName(), p.getNameEn()),
+                    lang.pick(p.getSiteTitle(), p.getSiteTitleEn()),
+                    lang.pick(p.getDescription(), p.getDescriptionEn()),
+                    lang.pick(p.getKeywords(), p.getKeywordsEn()),
+                    lang.pick(p.getGreeting(), p.getGreetingEn()),
+                    lang.pick(p.getIntro(), p.getIntroEn()),
+                    lang.pickList(p.getTags(), p.getTagsEn()),
+                    p.getAboutParagraphs(lang),
+                    lang.pick(p.getFooterText(), p.getFooterTextEn()),
+                    p.isMessageEnabled());
         }
     }
 
     public record ExperienceView(Long id, String period, String role, String org, String description) {
-        static ExperienceView from(Experience e) {
-            return new ExperienceView(e.getId(), e.getPeriod(), e.getRole(), e.getOrg(), e.getDescription());
+        static ExperienceView from(Experience e, SiteLang lang) {
+            return new ExperienceView(e.getId(),
+                    lang.pick(e.getPeriod(), e.getPeriodEn()),
+                    lang.pick(e.getRole(), e.getRoleEn()),
+                    lang.pick(e.getOrg(), e.getOrgEn()),
+                    lang.pick(e.getDescription(), e.getDescriptionEn()));
         }
     }
 
     public record ProjectView(Long id, String slug, String name, String link, String description,
                               List<String> meta, boolean detailPublished) {
-        static ProjectView from(Project p) {
-            return new ProjectView(p.getId(), p.getSlug(), p.getName(), p.getLink(), p.getDescription(),
-                    List.copyOf(p.getMeta()), p.isDetailPublished());
+        static ProjectView from(Project p, SiteLang lang) {
+            return new ProjectView(p.getId(), p.getSlug(),
+                    lang.pick(p.getName(), p.getNameEn()), p.getLink(),
+                    lang.pick(p.getDescription(), p.getDescriptionEn()),
+                    lang.pickList(p.getMeta(), p.getMetaEn()), p.isDetailPublished());
         }
     }
 
     public record ContactView(Long id, String label, String text, String href, boolean external) {
-        static ContactView from(ContactLink c) {
-            return new ContactView(c.getId(), c.getLabel(), c.getText(), c.getHref(), c.isExternal());
+        static ContactView from(ContactLink c, SiteLang lang) {
+            return new ContactView(c.getId(),
+                    lang.pick(c.getLabel(), c.getLabelEn()),
+                    lang.pick(c.getText(), c.getTextEn()),
+                    c.getHref(), c.isExternal());
         }
     }
 }

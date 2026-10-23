@@ -43,6 +43,10 @@ public class AiProject extends SortableEntity {
     @Column(nullable = false, length = 100)
     private String title;
 
+    @Size(max = 200, message = "项目名称英文版最多 200 个字符")
+    @Column(name = "title_en", length = 200)
+    private String titleEn;
+
     @Size(max = 100, message = "路径最多 100 个字符")
     @Pattern(regexp = "^$|^[a-z0-9]+(?:-[a-z0-9]+)*$", message = "路径只能包含小写字母、数字和连字符")
     @Column(unique = true, length = 100)
@@ -53,6 +57,10 @@ public class AiProject extends SortableEntity {
     @Column(nullable = false, length = 500)
     private String summary;
 
+    @Size(max = 1000, message = "摘要英文版最多 1000 个字符")
+    @Column(name = "summary_en", length = 1000)
+    private String summaryEn;
+
     @NotNull(message = "请选择项目状态")
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
@@ -62,10 +70,20 @@ public class AiProject extends SortableEntity {
     @Column(length = 100)
     private String models;
 
+    @Size(max = 200, message = "模型说明英文版最多 200 个字符")
+    @Column(name = "models_en", length = 200)
+    private String modelsEn;
+
     @Size(max = 12, message = "技术栈最多 12 个")
     @Convert(converter = StringListConverter.class)
     @Column(length = 600)
     private List<@Size(max = 40, message = "单个技术项最多 40 个字") String> stack = new ArrayList<>();
+
+    /** 技术栈英文版（可选，缺省回退中文）。 */
+    @Size(max = 12, message = "技术栈英文版最多 12 个")
+    @Convert(converter = StringListConverter.class)
+    @Column(name = "stack_en", length = 800)
+    private List<@Size(max = 60, message = "单个技术项英文版最多 60 个字符") String> stackEn = new ArrayList<>();
 
     @Size(max = 300, message = "演示链接最多 300 个字符")
     @Pattern(regexp = "^$|^https?://\\S+$", message = "演示链接需以 http:// 或 https:// 开头")
@@ -81,6 +99,11 @@ public class AiProject extends SortableEntity {
     @Size(max = 100_000, message = "Markdown 正文最多 100000 个字")
     @Column(name = "content_markdown", columnDefinition = "TEXT")
     private String contentMarkdown;
+
+    @Lob
+    @Size(max = 120_000, message = "Markdown 正文英文版最多 120000 个字符")
+    @Column(name = "content_markdown_en", columnDefinition = "TEXT")
+    private String contentMarkdownEn;
 
     @JsonIgnore
     @AssertTrue(message = "公开 AI 项目前必须填写路径和 Markdown 正文")

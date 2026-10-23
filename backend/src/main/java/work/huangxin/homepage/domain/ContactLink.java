@@ -27,10 +27,18 @@ public class ContactLink extends SortableEntity {
     @Column(nullable = false, length = 20)
     private String label;
 
+    @Size(max = 40, message = "名称英文版最多 40 个字符")
+    @Column(name = "label_en", length = 40)
+    private String labelEn;
+
     @NotBlank(message = "显示文字不能为空")
     @Size(max = 100, message = "显示文字最多 100 个字")
     @Column(nullable = false, length = 100)
     private String text;
+
+    @Size(max = 200, message = "显示文字英文版最多 200 个字符")
+    @Column(name = "text_en", length = 200)
+    private String textEn;
 
     /** 只允许 http(s) / mailto / tel，防止 javascript: 之类的链接 */
     @Size(max = 300, message = "链接最多 300 个字符")

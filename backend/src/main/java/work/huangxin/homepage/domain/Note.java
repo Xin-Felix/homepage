@@ -49,6 +49,10 @@ public class Note {
     @Column(nullable = false, length = 120)
     private String title;
 
+    @Size(max = 240, message = "标题英文版最多 240 个字符")
+    @Column(name = "title_en", length = 240)
+    private String titleEn;
+
     @NotBlank(message = "路径不能为空")
     @Size(max = 100, message = "路径最多 100 个字符")
     @Pattern(regexp = "^[a-z0-9]+(?:-[a-z0-9]+)*$", message = "路径只能包含小写字母、数字和连字符")
@@ -60,16 +64,31 @@ public class Note {
     @Column(nullable = false, length = 500)
     private String summary;
 
+    @Size(max = 1000, message = "摘要英文版最多 1000 个字符")
+    @Column(name = "summary_en", length = 1000)
+    private String summaryEn;
+
     @Size(max = 10, message = "标签最多 10 个")
     @Convert(converter = StringListConverter.class)
     @Column(length = 500)
     private List<@Size(max = 30, message = "单个标签最多 30 个字") String> tags = new ArrayList<>();
+
+    /** 标签英文版（可选，缺省回退中文）。 */
+    @Size(max = 10, message = "标签英文版最多 10 个")
+    @Convert(converter = StringListConverter.class)
+    @Column(name = "tags_en", length = 600)
+    private List<@Size(max = 50, message = "单个标签英文版最多 50 个字符") String> tagsEn = new ArrayList<>();
 
     @Lob
     @NotBlank(message = "Markdown 正文不能为空")
     @Size(max = 100_000, message = "正文最多 100000 个字")
     @Column(name = "content_markdown", nullable = false, columnDefinition = "TEXT")
     private String contentMarkdown;
+
+    @Lob
+    @Size(max = 120_000, message = "正文英文版最多 120000 个字符")
+    @Column(name = "content_markdown_en", columnDefinition = "TEXT")
+    private String contentMarkdownEn;
 
     @Column(nullable = false)
     private boolean published = false;

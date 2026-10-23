@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import work.huangxin.homepage.common.ApiResponse;
+import work.huangxin.homepage.common.SiteLang;
 import work.huangxin.homepage.domain.Note;
 import work.huangxin.homepage.ratelimit.RateLimit;
 import work.huangxin.homepage.service.NoteService;
@@ -26,7 +27,9 @@ public class PublicNoteController {
     @GetMapping
     @RateLimit(RateLimit.CHEAP)
     public ApiResponse<List<NoteSummary>> list(HttpServletRequest request) {
-        return ApiResponse.ok(noteService.listPublished().stream().map(NoteSummary::from).toList());
+        SiteLang lang = SiteLang.from(request);
+        return ApiResponse.ok(noteService.listPublished().stream()
+                .map(note -> NoteSummary.from(note, lang)).toList());
     }
 
     @GetMapping("/{slug}")
@@ -34,24 +37,30 @@ public class PublicNoteController {
     public ApiResponse<NoteDetail> detail(@PathVariable("slug") String slug,
                                           @RequestParam(name = "count", defaultValue = "true") boolean count,
                                           HttpServletRequest request) {
-        return ApiResponse.ok(NoteDetail.from(noteService.getPublished(slug, count)));
+        return ApiResponse.ok(NoteDetail.from(noteService.getPublished(slug, count), SiteLang.from(request)));
     }
 
     public record NoteSummary(Long id, String slug, String title, String summary, List<String> tags,
                               long readCount, LocalDateTime publishedAt) {
-        static NoteSummary from(Note note) {
-            return new NoteSummary(note.getId(), note.getSlug(), note.getTitle(), note.getSummary(),
-                    List.copyOf(note.getTags()), note.getReadCount(), note.getPublishedAt());
+        static NoteSummary from(Note note, SiteLang lang) {
+            return new NoteSummary(note.getId(), note.getSlug(),
+                    lang.pick(note.getTitle(), note.getTitleEn()),
+                    lang.pick(note.getSummary(), note.getSummaryEn()),
+                    lang.pickList(note.getTags(), note.getTagsEn()),
+                    note.getReadCount(), note.getPublishedAt());
         }
     }
 
     public record NoteDetail(Long id, String slug, String title, String summary, List<String> tags,
                              String contentMarkdown, long readCount, LocalDateTime publishedAt,
                              LocalDateTime updatedAt) {
-        static NoteDetail from(Note note) {
-            return new NoteDetail(note.getId(), note.getSlug(), note.getTitle(), note.getSummary(),
-                    List.copyOf(note.getTags()), note.getContentMarkdown(), note.getReadCount(),
-                    note.getPublishedAt(), note.getUpdatedAt());
+        static NoteDetail from(Note note, SiteLang lang) {
+            return new NoteDetail(note.getId(), note.getSlug(),
+                    lang.pick(note.getTitle(), note.getTitleEn()),
+                    lang.pick(note.getSummary(), note.getSummaryEn()),
+                    lang.pickList(note.getTags(), note.getTagsEn()),
+                    lang.pick(note.getContentMarkdown(), note.getContentMarkdownEn()),
+                    note.getReadCount(), note.getPublishedAt(), note.getUpdatedAt());
         }
     }
 }

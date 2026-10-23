@@ -35,6 +35,10 @@ public class Project extends SortableEntity {
     @Column(nullable = false, length = 50)
     private String name;
 
+    @Size(max = 100, message = "项目名称英文版最多 100 个字符")
+    @Column(name = "name_en", length = 100)
+    private String nameEn;
+
     @Size(max = 80, message = "项目路径最多 80 个字符")
     @Pattern(regexp = "^$|^[a-z0-9]+(?:-[a-z0-9]+)*$", message = "项目路径只能包含小写字母、数字和连字符")
     @Column(unique = true, length = 80)
@@ -49,13 +53,25 @@ public class Project extends SortableEntity {
     @Column(length = 1000)
     private String description;
 
+    @Size(max = 2000, message = "描述英文版最多 2000 个字符")
+    @Column(name = "description_en", length = 2000)
+    private String descriptionEn;
+
     @Size(max = 100, message = "项目角色最多 100 个字")
     @Column(length = 100)
     private String role;
 
+    @Size(max = 200, message = "项目角色英文版最多 200 个字符")
+    @Column(name = "role_en", length = 200)
+    private String roleEn;
+
     @Size(max = 50, message = "项目时间最多 50 个字")
     @Column(length = 50)
     private String period;
+
+    @Size(max = 80, message = "项目时间英文版最多 80 个字符")
+    @Column(name = "period_en", length = 80)
+    private String periodEn;
 
     /** 卡片底部的小标签，如「Java / Spring Boot」「2024 — 至今」。 */
     @Size(max = 8, message = "标签最多 8 个")
@@ -63,10 +79,21 @@ public class Project extends SortableEntity {
     @Column(length = 500)
     private List<@Size(max = 40, message = "单个标签最多 40 个字") String> meta = new ArrayList<>();
 
+    /** 卡片标签英文版（可选，缺省回退中文）。 */
+    @Size(max = 8, message = "标签英文版最多 8 个")
+    @Convert(converter = StringListConverter.class)
+    @Column(name = "meta_en", length = 700)
+    private List<@Size(max = 60, message = "单个标签英文版最多 60 个字符") String> metaEn = new ArrayList<>();
+
     @Lob
     @Size(max = 50_000, message = "项目详情最多 50000 个字")
     @Column(name = "content_markdown", columnDefinition = "TEXT")
     private String contentMarkdown;
+
+    @Lob
+    @Size(max = 60_000, message = "项目详情英文版最多 60000 个字符")
+    @Column(name = "content_markdown_en", columnDefinition = "TEXT")
+    private String contentMarkdownEn;
 
     /** 首页卡片可见与详情发布分开控制，方便先写草稿。 */
     @Column(name = "detail_published", nullable = false)
