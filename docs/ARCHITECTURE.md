@@ -43,6 +43,16 @@ flowchart LR
 - 只透传 `content-type`、`cache-control`、`retry-after`、`x-robots-tag` 等响应头白名单；
 - backend 5xx 在公开 BFF 中转换为不泄露内部信息的 503。
 
+## 中英文双语
+
+- 语言的权威信号是 URL 的 `/en` 前缀，SSR 与客户端一致，利于 SEO 与缓存；
+- `nuxt.config.ts` 的 `pages:extend` 钩子为每个公开页面克隆一份 `/en` 前缀路由，指向同一组件，不复制页面文件、不改动取数逻辑；
+- `app/composables/useLocale.ts` 依据当前路径判断语言，提供界面文案字典（`app/i18n/messages.ts`）、`localePath()` 和语言切换链接；
+- 页面 BFF 请求携带 `x-site-lang`，经 `server/utils/request-context.ts` 转发给 backend 的 `X-Site-Lang` 头；
+- backend 的 `SiteLang`（`common/SiteLang.java`）据此在公开 DTO 的 `from(entity, lang)` 映射里选择中文或英文字段，英文为空回退中文；`SiteService` 的缓存缓存实体数据（中英文都在内），语言选择发生在控制器层，不受缓存影响；
+- 实体为每个展示文本字段新增了 `*_en` 列；slug、链接、状态、布尔等语言无关字段共用；
+- 业务内容的中文是权威版本，英文为可选翻译，二者都在后台双份编辑。
+
 ## 真实 IP 信任链
 
 Nitro 只信任 loopback、link-local 和 private 网络代理，并从 `X-Forwarded-For` 右向左停在第一个不可信地址。转发 backend 时丢弃原始代理链，重建最小 `X-Forwarded-*` 头。
