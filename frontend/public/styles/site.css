@@ -154,6 +154,20 @@ a, button { color: inherit; }
   transition: border-color .16s ease, background-color .16s ease;
 }
 .icon-button:hover { border-color: var(--line-strong); background: var(--card); }
+/* 语言切换是文字按钮（中文 / English），宽度自适应，与图标按钮同高同风格。 */
+.lang-toggle {
+  width: auto;
+  min-width: 38px;
+  padding: 0 11px;
+  text-decoration: none;
+  color: var(--ink-soft, currentColor);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .02em;
+  white-space: nowrap;
+}
+.lang-toggle:hover { color: var(--ink, currentColor); }
+.lang-toggle-text { line-height: 1; }
 .theme-icon { width: 16px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 .theme-icon--sun { display: none; }
 [data-theme="light"] .theme-icon--moon { display: none; }
