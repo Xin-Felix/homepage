@@ -10,7 +10,18 @@ type HomepageEventContext = H3Event['context'] & {
   homepageHost?: string
   homepageUserAgent?: string
   homepageReferer?: string
+  homepageLang?: 'zh' | 'en'
   homepageEffects?: Set<string>
+}
+
+/** 读取当前请求的展示语言；默认中文。前端页面子请求通过 x-site-lang 头声明语言。 */
+export function getSiteLang(event: H3Event): 'zh' | 'en' {
+  const context = event.context as HomepageEventContext
+  if (context.homepageLang) return context.homepageLang
+  const header = String(getRequestHeader(event, 'x-site-lang') || '').trim().toLowerCase()
+  const lang = header === 'en' ? 'en' : 'zh'
+  context.homepageLang = lang
+  return lang
 }
 
 /** 将 IPv4-mapped IPv6、带端口 IPv4 和方括号 IPv6 统一为可比较的 IP 字面量。 */
@@ -110,6 +121,8 @@ export function buildBackendHeaders(event: H3Event): Record<string, string> {
   }
   const referer = context.homepageReferer ?? getRequestHeader(event, 'referer')
   if (referer) headers.referer = referer
+  // 把展示语言透传给后端，使公开接口按语言返回中/英内容。
+  if (getSiteLang(event) === 'en') headers['x-site-lang'] = 'en'
   return headers
 }
 
@@ -144,6 +157,11 @@ export function initializeRequestContext(event: H3Event): void {
   context.homepageReferer ??= isInternalSubrequest
     ? getRequestHeader(event, 'x-homepage-referer') || ''
     : getRequestHeader(event, 'referer') || ''
+
+  // 语言在内部子请求与根请求都从 x-site-lang 读取（页面 composable 会显式带上）。
+  const langHeader = String(getRequestHeader(event, 'x-site-lang') || '').trim().toLowerCase()
+  context.homepageLang ??= langHeader === 'en' ? 'en' : 'zh'
+
   getClientIp(event)
 }
 

@@ -3,6 +3,27 @@ export default defineNuxtConfig({
 
   devtools: { enabled: false },
 
+  // 为每个公开页面克隆一份 /en 前缀路由，指向同一组件；组件内通过 useLocale()
+  // 依据路径前缀切换语言。admin 页面不参与双语。克隆时清掉 alias，避免生成 /en/index.html。
+  hooks: {
+    'pages:extend'(pages) {
+      const isPublic = (file?: string) =>
+        typeof file === 'string'
+        && file.includes('/pages/')
+        && !file.includes('/pages/admin/')
+      const clones = pages
+        .filter(page => isPublic(page.file) && typeof page.path === 'string' && !page.path.startsWith('/en'))
+        .map(page => ({
+          ...page,
+          name: page.name ? `${page.name}___en` : undefined,
+          path: page.path === '/' ? '/en' : `/en${page.path}`,
+          alias: undefined,
+          children: undefined,
+        }))
+      pages.push(...clones)
+    },
+  },
+
   // 仅放服务端配置，避免将 backend 内网地址暴露到客户端 payload。
   runtimeConfig: {
     backendOrigin: 'http://backend:8080',

@@ -16,8 +16,11 @@ const themeBootstrap = `(() => {
   if (meta) meta.content = theme === 'light' ? '#f4f3ed' : '#0b0d0f';
 })();`
 
+// html lang 跟随 /en 前缀，SSR 即正确，利于可访问性与 SEO。
+const { htmlLang } = useLocale()
+
 useHead({
-  htmlAttrs: { lang: 'zh-CN' },
+  htmlAttrs: { lang: htmlLang },
   meta: [
     { charset: 'utf-8' },
     { name: 'viewport', content: 'width=device-width, initial-scale=1.0' },

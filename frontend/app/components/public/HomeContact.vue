@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useLocale } from '~/composables/useLocale'
 import type { PublicContact } from '~/types/public'
 import SectionHeading from './SectionHeading.vue'
 
@@ -9,12 +10,19 @@ defineProps<{
 }>()
 
 const emit = defineEmits<{ openContact: [] }>()
+const { isEnglish } = useLocale()
+const kicker = computed(() => (isEnglish.value ? 'CONTACT' : 'CONTACT / 联系我'))
+const leaveMsg = computed(() => (isEnglish.value ? 'Leave a message' : '给我留言'))
+const viewContact = computed(() => (isEnglish.value ? 'View contact info' : '查看联系方式'))
+const openFormLabel = computed(() => (isEnglish.value ? 'Open message form' : '打开留言表单'))
+const viewContactLabel = computed(() => (isEnglish.value ? 'View contact info' : '查看联系方式'))
 </script>
 
 <template>
   <section id="contact" class="content-section contact-section section-anchor" aria-labelledby="contact-title">
-    <SectionHeading :number="hasAi ? '05' : '04'" kicker="CONTACT / 联系我" title-id="contact-title">
-      如果你也在构建，<br><em>我们可以交换一些想法。</em>
+    <SectionHeading :number="hasAi ? '05' : '04'" :kicker="kicker" title-id="contact-title">
+      <template v-if="isEnglish">If you are building too,<br><em>let us trade a few ideas.</em></template>
+      <template v-else>如果你也在构建，<br><em>我们可以交换一些想法。</em></template>
     </SectionHeading>
     <div class="contact-grid">
       <article class="bento-card contact-links-card reveal">
@@ -49,13 +57,13 @@ const emit = defineEmits<{ openContact: [] }>()
             v-if="messageEnabled"
             class="round-button"
             type="button"
-            aria-label="打开留言表单"
+            :aria-label="openFormLabel"
             @click="emit('openContact')"
           >
-            <span>给我留言</span><i aria-hidden="true">↗</i>
+            <span>{{ leaveMsg }}</span><i aria-hidden="true">↗</i>
           </button>
-          <NuxtLink v-else class="round-button" to="#contact" aria-label="查看联系方式">
-            <span>查看联系方式</span><i aria-hidden="true">↗</i>
+          <NuxtLink v-else class="round-button" to="#contact" :aria-label="viewContactLabel">
+            <span>{{ viewContact }}</span><i aria-hidden="true">↗</i>
           </NuxtLink>
         </div>
       </article>

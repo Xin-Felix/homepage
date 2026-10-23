@@ -27,6 +27,10 @@ export function usePublicPageData<T>(key: string, path: string) {
   const requestFetch = useRequestFetch()
   const headers: Record<string, string> = {}
 
+  // 把当前语言传给 BFF，再由 BFF 转发给后端，使同一组页面组件按语言取到不同内容。
+  const { locale } = useLocale()
+  if (locale.value === 'en') headers['x-site-lang'] = 'en'
+
   if (import.meta.server) {
     const context = useRequestEvent()?.context as ServerRequestContext | undefined
     const inherited = [
@@ -47,8 +51,11 @@ export function usePublicPageData<T>(key: string, path: string) {
     options: { headers: Record<string, string> },
   ) => Promise<Result>
 
+  // key 带上语言，避免中英文内容共用同一份缓存。
+  const scopedKey = locale.value === 'en' ? `${key}:en` : key
+
   return useAsyncData<T>(
-    key,
+    scopedKey,
     () => fetchPage<T>(path, { headers }),
     {
       deep: false,

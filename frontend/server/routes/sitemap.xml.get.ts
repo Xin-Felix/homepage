@@ -10,7 +10,7 @@ export default defineEventHandler(async (event) => {
     backendJson<NoteSummary[]>(event, '/api/public/notes'),
     backendJson<AiProjectSummary[]>(event, '/api/public/ai-projects'),
   ])
-  const entries = [
+  const baseEntries = [
     { path: '/', changefreq: 'weekly', priority: '1.0' },
     { path: '/notes', changefreq: 'weekly', priority: '0.8' },
     ...home.projects
@@ -31,6 +31,13 @@ export default defineEventHandler(async (event) => {
       priority: '0.7',
     })),
   ]
+  // 中文为默认（权威）版本，英文页以 /en 前缀追加，优先级略低。
+  const enEntries = baseEntries.map(entry => ({
+    ...entry,
+    path: entry.path === '/' ? '/en' : `/en${entry.path}`,
+    priority: (Math.max(0.1, Number(entry.priority) - 0.1)).toFixed(1),
+  }))
+  const entries = [...baseEntries, ...enEntries]
   const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${entries.map(entry => sitemapEntry(event, entry)).join('\n')}\n</urlset>`
 
   setResponseHeader(event, 'Content-Type', 'application/xml; charset=utf-8')

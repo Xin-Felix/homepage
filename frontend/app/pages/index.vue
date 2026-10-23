@@ -15,14 +15,17 @@ import type { PublicHomePageData } from '~/types/public'
 // 兼容旧公开入口；主 canonical 始终保持为根路径。
 definePageMeta({ alias: ['/index', '/index.html'] })
 
+const { messages, localePath, logicalPath } = useLocale()
+const t = computed(() => messages.value)
+
 const { data, error } = await usePublicPageData<PublicHomePageData>('public-home', '/api/page/home')
-const page = requirePublicPage(data, error, '你要找的页面不存在。')
+const page = requirePublicPage(data, error, t.value.errors.notFound)
 const site = page.site
 const profile = site.profile
 const aiProjects = site.aiProjects || []
 const contactDialog = ref<InstanceType<typeof ContactDialog> | null>(null)
 const requestUrl = useRequestURL()
-const homeUrl = new URL('/', requestUrl.origin).toString()
+const homeUrl = new URL(logicalPath.value === '/' ? '/' : logicalPath.value, requestUrl.origin).toString()
 
 usePublicSeo({
   title: profile.siteTitle,
@@ -36,7 +39,7 @@ usePublicSeo({
     '@type': 'Person',
     name: profile.name,
     url: homeUrl,
-    jobTitle: 'Java 后端工程师',
+    jobTitle: t.value.common.jobTitle,
     sameAs: site.contacts.map(item => item.href).filter(href => href?.startsWith('http')),
     knowsAbout: profile.tags,
   },
@@ -76,6 +79,6 @@ const openContact = () => contactDialog.value?.open()
     />
   </main>
 
-  <SiteFooter :profile="profile" secondary="DESIGNED TO LAST · BUILT WITH JAVA" />
+  <SiteFooter :profile="profile" :secondary="t.footer.secondary" />
   <ContactDialog v-if="profile.messageEnabled" ref="contactDialog" />
 </template>

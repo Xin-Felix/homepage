@@ -10,12 +10,10 @@ import type {
   PublicHome,
 } from '#server/types/site'
 import { backendJson, getErrorStatus } from '#server/utils/backend'
+import { localizedPath, serverMessages } from '#server/utils/i18n'
 import { renderMarkdown } from '#server/utils/markdown'
-import { claimRequestEffect } from '#server/utils/request-context'
+import { claimRequestEffect, getSiteLang } from '#server/utils/request-context'
 import { absoluteUrl, buildSeo, isValidSlug } from '#server/utils/seo'
-
-const NOTES_DESCRIPTION = '关于后端工程、系统迁移、实时风控与稳定性治理的技术笔记。'
-const AI_DESCRIPTION = 'AI、Agent、RAG、MCP 与模型工程实验项目。'
 
 function notFound(reason: string) {
   return createError({ statusCode: 404, message: reason, data: { status: 'error', reason } })
@@ -51,23 +49,25 @@ async function recordPageVisit(event: H3Event, path: string, fallbackViews: numb
 }
 
 export async function loadHomePage(event: H3Event) {
+  const lang = getSiteLang(event)
+  const t = serverMessages(lang)
   const [home, aiProjects] = await Promise.all([
     backendJson<PublicHome>(event, '/api/public/home'),
     backendJson<AiProjectSummary[]>(event, '/api/public/ai-projects'),
   ])
   const site = { ...home, aiProjects }
-  const views = await recordPageVisit(event, '/', home.views)
+  const views = await recordPageVisit(event, localizedPath('/', lang), home.views)
   const seo = buildSeo(event, {
     title: home.profile.siteTitle,
     description: home.profile.description,
-    path: '/',
+    path: localizedPath('/', lang),
     imagePath: '/og/home.png',
     jsonLd: {
       '@context': 'https://schema.org',
       '@type': 'Person',
       name: home.profile.name,
-      url: absoluteUrl(event, '/'),
-      jobTitle: 'Java 后端工程师',
+      url: absoluteUrl(event, localizedPath('/', lang)),
+      jobTitle: t.jobTitle,
       sameAs: home.contacts.map(item => item.href).filter(href => href?.startsWith('http')),
       knowsAbout: home.profile.tags,
     },
@@ -77,16 +77,17 @@ export async function loadHomePage(event: H3Event) {
 
 export async function loadProjectPage(event: H3Event, rawSlug: string | undefined) {
   const slug = requireSlug(rawSlug)
+  const lang = getSiteLang(event)
   return remapNotFound((async () => {
     const [home, project] = await Promise.all([
       backendJson<PublicHome>(event, '/api/public/home'),
       backendJson<ProjectDetail>(event, `/api/public/projects/${encodeURIComponent(slug)}`),
     ])
-    const views = await recordPageVisit(event, `/projects/${slug}`, home.views)
+    const views = await recordPageVisit(event, localizedPath(`/projects/${slug}`, lang), home.views)
     const seo = buildSeo(event, {
       title: `${project.name} · ${home.profile.name}`,
       description: project.description,
-      path: `/projects/${project.slug}`,
+      path: localizedPath(`/projects/${project.slug}`, lang),
       imagePath: `/og/project/${project.slug}.png`,
       type: 'article',
       jsonLd: {
@@ -94,7 +95,7 @@ export async function loadProjectPage(event: H3Event, rawSlug: string | undefine
         '@type': 'CreativeWork',
         name: project.name,
         description: project.description,
-        url: absoluteUrl(event, `/projects/${project.slug}`),
+        url: absoluteUrl(event, localizedPath(`/projects/${project.slug}`, lang)),
         author: { '@type': 'Person', name: home.profile.name },
         keywords: project.meta.join(', '),
       },
@@ -111,22 +112,24 @@ export async function loadProjectPage(event: H3Event, rawSlug: string | undefine
 }
 
 export async function loadNotesPage(event: H3Event) {
+  const lang = getSiteLang(event)
+  const t = serverMessages(lang)
   const [home, notes] = await Promise.all([
     backendJson<PublicHome>(event, '/api/public/home'),
     backendJson<NoteSummary[]>(event, '/api/public/notes'),
   ])
-  const views = await recordPageVisit(event, '/notes', home.views)
+  const views = await recordPageVisit(event, localizedPath('/notes', lang), home.views)
   const seo = buildSeo(event, {
-    title: `技术笔记 · ${home.profile.name}`,
-    description: NOTES_DESCRIPTION,
-    path: '/notes',
+    title: `${t.notesTitle} · ${home.profile.name}`,
+    description: t.notesDescription,
+    path: localizedPath('/notes', lang),
     imagePath: '/og/notes.png',
     jsonLd: {
       '@context': 'https://schema.org',
       '@type': 'CollectionPage',
-      name: '技术笔记',
-      description: NOTES_DESCRIPTION,
-      url: absoluteUrl(event, '/notes'),
+      name: t.notesTitle,
+      description: t.notesDescription,
+      url: absoluteUrl(event, localizedPath('/notes', lang)),
       author: { '@type': 'Person', name: home.profile.name },
     },
   })
@@ -135,6 +138,7 @@ export async function loadNotesPage(event: H3Event) {
 
 export async function loadNotePage(event: H3Event, rawSlug: string | undefined) {
   const slug = requireSlug(rawSlug)
+  const lang = getSiteLang(event)
   return remapNotFound((async () => {
     // 文章阅读数也是副作用：HEAD=false；同一 SSR 上下文内的重复取数使用 count=false。
     const countRead = claimRequestEffect(event, `note-read:${slug}`)
@@ -142,11 +146,11 @@ export async function loadNotePage(event: H3Event, rawSlug: string | undefined) 
       backendJson<PublicHome>(event, '/api/public/home'),
       backendJson<NoteDetail>(event, `/api/public/notes/${encodeURIComponent(slug)}?count=${countRead}`),
     ])
-    const views = await recordPageVisit(event, `/notes/${slug}`, home.views)
+    const views = await recordPageVisit(event, localizedPath(`/notes/${slug}`, lang), home.views)
     const seo = buildSeo(event, {
       title: `${note.title} · ${home.profile.name}`,
       description: note.summary,
-      path: `/notes/${note.slug}`,
+      path: localizedPath(`/notes/${note.slug}`, lang),
       imagePath: `/og/note/${note.slug}.png`,
       type: 'article',
       publishedTime: note.publishedAt,
@@ -156,7 +160,7 @@ export async function loadNotePage(event: H3Event, rawSlug: string | undefined) 
         '@type': 'TechArticle',
         headline: note.title,
         description: note.summary,
-        url: absoluteUrl(event, `/notes/${note.slug}`),
+        url: absoluteUrl(event, localizedPath(`/notes/${note.slug}`, lang)),
         datePublished: note.publishedAt,
         dateModified: note.updatedAt,
         author: { '@type': 'Person', name: home.profile.name },
@@ -175,24 +179,26 @@ export async function loadNotePage(event: H3Event, rawSlug: string | undefined) 
 }
 
 export async function loadAiPage(event: H3Event) {
+  const lang = getSiteLang(event)
+  const t = serverMessages(lang)
   const [home, projects] = await Promise.all([
     backendJson<PublicHome>(event, '/api/public/home'),
     backendJson<AiProjectSummary[]>(event, '/api/public/ai-projects'),
   ])
   if (!projects.length) throw notFound('AI Lab 暂未开放。')
 
-  const views = await recordPageVisit(event, '/ai', home.views)
+  const views = await recordPageVisit(event, localizedPath('/ai', lang), home.views)
   const seo = buildSeo(event, {
-    title: `AI Lab · ${home.profile.name}`,
-    description: AI_DESCRIPTION,
-    path: '/ai',
+    title: `${t.aiTitle} · ${home.profile.name}`,
+    description: t.aiDescription,
+    path: localizedPath('/ai', lang),
     imagePath: '/og/ai.png',
     jsonLd: {
       '@context': 'https://schema.org',
       '@type': 'CollectionPage',
-      name: 'AI Lab',
-      description: AI_DESCRIPTION,
-      url: absoluteUrl(event, '/ai'),
+      name: t.aiTitle,
+      description: t.aiDescription,
+      url: absoluteUrl(event, localizedPath('/ai', lang)),
     },
   })
   return { p: home.profile, projects, views, year: new Date().getFullYear(), seo }
@@ -200,16 +206,18 @@ export async function loadAiPage(event: H3Event) {
 
 export async function loadAiDetailPage(event: H3Event, rawSlug: string | undefined) {
   const slug = requireSlug(rawSlug)
+  const lang = getSiteLang(event)
+  const t = serverMessages(lang)
   return remapNotFound((async () => {
     const [home, project] = await Promise.all([
       backendJson<PublicHome>(event, '/api/public/home'),
       backendJson<AiProjectDetail>(event, `/api/public/ai-projects/${encodeURIComponent(slug)}`),
     ])
-    const views = await recordPageVisit(event, `/ai/${slug}`, home.views)
+    const views = await recordPageVisit(event, localizedPath(`/ai/${slug}`, lang), home.views)
     const seo = buildSeo(event, {
-      title: `${project.title} · AI Lab · ${home.profile.name}`,
+      title: `${project.title} · ${t.aiTitle} · ${home.profile.name}`,
       description: project.summary,
-      path: `/ai/${project.slug}`,
+      path: localizedPath(`/ai/${project.slug}`, lang),
       imagePath: `/og/ai/${project.slug}.png`,
       type: 'article',
       jsonLd: {
@@ -217,7 +225,7 @@ export async function loadAiDetailPage(event: H3Event, rawSlug: string | undefin
         '@type': 'SoftwareApplication',
         name: project.title,
         description: project.summary,
-        url: absoluteUrl(event, `/ai/${project.slug}`),
+        url: absoluteUrl(event, localizedPath(`/ai/${project.slug}`, lang)),
         applicationCategory: 'DeveloperApplication',
         author: { '@type': 'Person', name: home.profile.name },
       },

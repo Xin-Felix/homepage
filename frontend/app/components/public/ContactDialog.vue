@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { nextTick, onBeforeUnmount, reactive, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, reactive, ref } from 'vue'
+import { useLocale } from '~/composables/useLocale'
 
 interface MessageResult {
   status: 'success' | 'error'
@@ -9,6 +10,45 @@ interface MessageResult {
 interface FetchFailure {
   data?: MessageResult
 }
+
+const { isEnglish } = useLocale()
+const c = computed(() => isEnglish.value
+  ? {
+      newMessage: 'NEW MESSAGE',
+      title: 'What\u2019s on your mind?',
+      close: 'Close message window',
+      intro: 'Only I can see this in the back office. Leave your contact and I will reply soon.',
+      name: 'Name', required: '*',
+      namePlaceholder: 'What should I call you',
+      contact: 'Contact',
+      contactPlaceholder: 'Email / WeChat (optional)',
+      content: 'Your message',
+      contentPlaceholder: 'A project, a technical topic, or anything interesting\u2026',
+      website: 'Website',
+      send: 'Send message',
+      validation: 'Please enter a name and at least 2 characters',
+      sending: 'Sending\u2026',
+      sendFail: 'Failed to send, please try again',
+      success: 'Got it, I will reply as soon as possible.',
+    }
+  : {
+      newMessage: 'NEW MESSAGE',
+      title: '聊点什么？',
+      close: '关闭留言窗口',
+      intro: '留言只有我能在后台看到。留下联系方式，我会尽快回复。',
+      name: '称呼', required: '*',
+      namePlaceholder: '怎么称呼你',
+      contact: '联系方式',
+      contactPlaceholder: '邮箱 / 微信（选填）',
+      content: '想说的话',
+      contentPlaceholder: '项目、技术，或者任何有意思的话题…',
+      website: '网站',
+      send: '发送消息',
+      validation: '请填写称呼和至少 2 个字的内容',
+      sending: '正在发送…',
+      sendFail: '发送失败，请稍后重试',
+      success: '收到，我会尽快回复你。',
+    })
 
 const dialog = ref<HTMLDialogElement | null>(null)
 const nameInput = ref<HTMLInputElement | null>(null)
@@ -58,12 +98,12 @@ const onSubmit = async () => {
     website: form.website,
   }
   if (!payload.name || payload.content.length < 2) {
-    setStatus('请填写称呼和至少 2 个字的内容', 'error')
+    setStatus(c.value.validation, 'error')
     return
   }
 
   submitting.value = true
-  setStatus('正在发送…')
+  setStatus(c.value.sending)
   try {
     const result = await $fetch<MessageResult>('/api/messages', {
       method: 'POST',
@@ -71,19 +111,19 @@ const onSubmit = async () => {
       body: payload,
     })
     if (!result || result.status !== 'success') {
-      setStatus(result?.reason || '发送失败，请稍后重试', 'error')
+      setStatus(result?.reason || c.value.sendFail, 'error')
       return
     }
     form.name = ''
     form.contact = ''
     form.content = ''
     form.website = ''
-    setStatus('收到，我会尽快回复你。', 'success')
+    setStatus(c.value.success, 'success')
     closeTimer = window.setTimeout(close, 1400)
   }
   catch (error) {
     const failure = error as FetchFailure
-    setStatus(failure.data?.reason || '发送失败，请稍后重试', 'error')
+    setStatus(failure.data?.reason || c.value.sendFail, 'error')
   }
   finally {
     submitting.value = false
@@ -111,17 +151,17 @@ defineExpose({ open, close })
     <div class="dialog-shell">
       <header class="dialog-head">
         <div>
-          <span>NEW MESSAGE</span>
-          <h2 id="dialog-title">聊点什么？</h2>
+          <span>{{ c.newMessage }}</span>
+          <h2 id="dialog-title">{{ c.title }}</h2>
         </div>
-        <button type="button" class="dialog-close" aria-label="关闭留言窗口" @click="close">×</button>
+        <button type="button" class="dialog-close" :aria-label="c.close" @click="close">×</button>
       </header>
-      <p class="dialog-intro">留言只有我能在后台看到。留下联系方式，我会尽快回复。</p>
+      <p class="dialog-intro">{{ c.intro }}</p>
 
       <form id="msg-form" class="message-form" @submit.prevent="onSubmit">
         <div class="form-grid">
           <label>
-            <span>称呼 <i>*</i></span>
+            <span>{{ c.name }} <i>{{ c.required }}</i></span>
             <input
               ref="nameInput"
               v-model="form.name"
@@ -129,22 +169,22 @@ defineExpose({ open, close })
               maxlength="30"
               required
               autocomplete="name"
-              placeholder="怎么称呼你"
+              :placeholder="c.namePlaceholder"
             >
           </label>
           <label>
-            <span>联系方式</span>
+            <span>{{ c.contact }}</span>
             <input
               v-model="form.contact"
               name="contact"
               maxlength="100"
               autocomplete="email"
-              placeholder="邮箱 / 微信（选填）"
+              :placeholder="c.contactPlaceholder"
             >
           </label>
         </div>
         <label>
-          <span>想说的话 <i>*</i></span>
+          <span>{{ c.content }} <i>{{ c.required }}</i></span>
           <textarea
             v-model="form.content"
             name="content"
@@ -152,11 +192,11 @@ defineExpose({ open, close })
             minlength="2"
             maxlength="1000"
             required
-            placeholder="项目、技术，或者任何有意思的话题…"
+            :placeholder="c.contentPlaceholder"
           ></textarea>
         </label>
         <div class="honeypot" aria-hidden="true">
-          <label>网站<input v-model="form.website" name="website" tabindex="-1" autocomplete="off"></label>
+          <label>{{ c.website }}<input v-model="form.website" name="website" tabindex="-1" autocomplete="off"></label>
         </div>
         <div class="form-footer">
           <span
@@ -166,7 +206,7 @@ defineExpose({ open, close })
             aria-live="polite"
           >{{ statusText }}</span>
           <button type="submit" class="button button--primary" :disabled="submitting">
-            发送消息 <span aria-hidden="true">↗</span>
+            {{ c.send }} <span aria-hidden="true">↗</span>
           </button>
         </div>
       </form>

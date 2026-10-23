@@ -27,6 +27,12 @@ export function usePublicSeo(source: MaybeRefOrGetter<PublicSeoInput>) {
   const input = computed(() => toValue(source))
   const absolute = (value: string) => new URL(value, requestUrl.origin).toString()
 
+  const { ogLocale, logicalPath, locale } = useLocale()
+  // 当前页面在两种语言下的绝对 URL，用于 hreflang alternate 与 x-default。
+  const zhHref = computed(() => absolute(logicalPath.value))
+  const enHref = computed(() => absolute(logicalPath.value === '/' ? '/en' : `/en${logicalPath.value}`))
+  const rssTitle = computed(() => (locale.value === 'en' ? 'Huang Xin · Engineering Notes' : '黄鑫的技术笔记'))
+
   const title = computed(() => input.value.provided?.title || input.value.title)
   const description = computed(() => input.value.provided?.description ?? input.value.description)
   const canonical = computed(() => {
@@ -45,7 +51,8 @@ export function usePublicSeo(source: MaybeRefOrGetter<PublicSeoInput>) {
   useSeoMeta({
     title: () => title.value,
     description: () => description.value,
-    ogLocale: 'zh_CN',
+    ogLocale: () => ogLocale.value,
+    ogLocaleAlternate: () => (locale.value === 'en' ? 'zh_CN' : 'en_US'),
     ogType: () => type.value,
     ogSiteName: 'huangxin.work',
     ogTitle: () => title.value,
@@ -68,7 +75,11 @@ export function usePublicSeo(source: MaybeRefOrGetter<PublicSeoInput>) {
       : [],
     link: [
       { rel: 'canonical', href: canonical.value },
-      { rel: 'alternate', type: 'application/rss+xml', title: '黄鑫的技术笔记', href: '/rss.xml' },
+      // 双语 hreflang：告诉搜索引擎中英文互为对应版本，默认指向中文。
+      { rel: 'alternate', hreflang: 'zh-CN', href: zhHref.value },
+      { rel: 'alternate', hreflang: 'en', href: enHref.value },
+      { rel: 'alternate', hreflang: 'x-default', href: zhHref.value },
+      { rel: 'alternate', type: 'application/rss+xml', title: rssTitle.value, href: '/rss.xml' },
     ],
     script: jsonLd.value
       ? [{ key: 'public-json-ld', type: 'application/ld+json', innerHTML: jsonLd.value }]

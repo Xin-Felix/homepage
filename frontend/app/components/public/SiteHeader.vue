@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { useLocale } from '~/composables/useLocale'
 import type { PublicProfile } from '~/types/public'
+import LocaleToggle from './LocaleToggle.vue'
 import SiteBrand from './SiteBrand.vue'
 import ThemeToggle from './ThemeToggle.vue'
 
@@ -13,14 +15,17 @@ const props = defineProps<{
 
 const route = useRoute()
 const menuOpen = ref(false)
+const { messages, localePath } = useLocale()
+const t = computed(() => messages.value)
 
+// 锚点链接在首页内滚动，其余链接带语言前缀。
 const desktopLinks = computed(() => [
-  ...(props.hasExperiences ? [{ to: '#experience', label: '经历' }] : []),
-  ...(props.hasProjects ? [{ to: '#projects', label: '项目' }] : []),
-  { to: '#about', label: '关于' },
-  { to: '/notes', label: '笔记' },
-  ...(props.hasAi ? [{ to: '#ai-lab', label: 'AI Lab' }] : []),
-  { to: '#contact', label: '联系' },
+  ...(props.hasExperiences ? [{ to: '#experience', label: t.value.nav.experience }] : []),
+  ...(props.hasProjects ? [{ to: '#projects', label: t.value.nav.projects }] : []),
+  { to: '#about', label: t.value.nav.about },
+  { to: localePath('/notes'), label: t.value.nav.notes },
+  ...(props.hasAi ? [{ to: '#ai-lab', label: t.value.nav.aiLab }] : []),
+  { to: '#contact', label: t.value.nav.contact },
 ])
 
 const mobileLinks = computed(() => desktopLinks.value.map((link, index) => ({
@@ -50,12 +55,12 @@ onBeforeUnmount(() => {
 
 <template>
   <header class="header-shell">
-    <nav class="topbar" aria-label="主导航">
+    <nav class="topbar" :aria-label="t.header.primaryNav">
       <SiteBrand
         :name="profile.name"
-        subtitle="BACKEND ENGINEER"
+        :subtitle="t.header.role"
         to="#top"
-        label="回到页面顶部"
+        :label="t.header.backToTop"
       />
 
       <div class="desktop-nav">
@@ -65,14 +70,15 @@ onBeforeUnmount(() => {
       </div>
 
       <div class="nav-actions">
-        <span class="status-pill"><i aria-hidden="true" />开放合适机会</span>
+        <span class="status-pill"><i aria-hidden="true" />{{ t.header.statusOpen }}</span>
+        <LocaleToggle />
         <ThemeToggle />
         <button
           id="menu-toggle"
           class="icon-button menu-button"
           :class="{ 'is-open': menuOpen }"
           type="button"
-          :aria-label="menuOpen ? '关闭导航菜单' : '打开导航菜单'"
+          :aria-label="menuOpen ? t.header.closeMenu : t.header.openMenu"
           :aria-expanded="menuOpen"
           aria-controls="mobile-menu"
           @click="menuOpen = !menuOpen"
