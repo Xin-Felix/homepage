@@ -121,8 +121,8 @@ const zh: Messages = {
     backToTop: '回到页面顶部',
     openMenu: '打开导航菜单',
     closeMenu: '关闭导航菜单',
-    switchToEn: 'English',
-    switchToZh: '中文',
+    switchToEn: 'EN',
+    switchToZh: 'CN',
     langLabel: '切换语言',
   },
   hero: {
@@ -220,8 +220,8 @@ const en: Messages = {
     backToTop: 'Back to top',
     openMenu: 'Open navigation menu',
     closeMenu: 'Close navigation menu',
-    switchToEn: 'English',
-    switchToZh: '中文',
+    switchToEn: 'EN',
+    switchToZh: 'CN',
     langLabel: 'Switch language',
   },
   hero: {
