@@ -33,7 +33,10 @@ public class DataInitializer implements ApplicationRunner {
             "db/content-updates/2026-10-fashion-item-matcher-ai.sql",
             "db/content-updates/2026-10-rebate-case-study.sql",
             "db/content-updates/2026-10-trading-tools-case-study.sql",
-            "db/content-updates/2026-10-ying-plus-ai-project.sql");
+            "db/content-updates/2026-10-ying-plus-ai-project.sql",
+            // 英文内容填充：放在所有中文内容脚本之后，仅在英文列为空时写入，不覆盖后台已填英文。
+            "db/content-updates/2026-10-english-core-fields.sql",
+            "db/content-updates/2026-10-english-markdown.sql");
 
     private final ProfileRepository profileRepository;
     private final DataSource dataSource;

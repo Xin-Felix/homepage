@@ -3,7 +3,8 @@
 
 INSERT INTO profile (
     id, name, site_title, description, keywords, greeting, intro, tags, about,
-    footer_text, message_enabled, views, updated_at
+    footer_text, message_enabled, views, updated_at,
+    name_en, site_title_en, description_en, keywords_en, greeting_en, intro_en, tags_en, about_en, footer_text_en
 ) VALUES (
     1,
     '黄鑫',
@@ -27,26 +28,53 @@ Python
     '黄鑫 · huangxin.work',
     TRUE,
     0,
-    CURRENT_TIMESTAMP
+    CURRENT_TIMESTAMP,
+    'Huang Xin',
+    'Huang Xin · Java Backend Engineer / Core Systems',
+    'Huang Xin — Java backend engineer with 4+ years building monetization money-flow, payment integration, real-time risk control, large-scale system migration and reliability engineering.',
+    'Huang Xin, Java, Backend Engineer, Spring Boot, Distributed Systems, Real-time Risk Control, Payment Systems, Monetization, Reliability Engineering',
+    'Hi, I''m',
+    'Java backend engineer with 4+ years on core business systems. I focus on monetization money-flow, payment integration, real-time risk control and complex system migration, with an eye on reliability, scalability and engineering efficiency.',
+    'Java
+Spring Boot
+Distributed Systems
+MySQL
+Docker
+Python
+Real-time Risk Control
+Payment Systems
+Reliability Engineering',
+    'BSc in Software Engineering, based in Hangzhou, China. I have long owned the design and maintenance of core internet business systems spanning products, merchants, marketing campaigns, monetization money-flow, payment integration and real-time risk control.
+I work well in high-concurrency, fast-changing and resource-constrained environments, breaking down architecture, driving reliability and delivering across teams. I have run a zero-downtime migration of 15,000+ products, delivered a real-time risk-control system to external environments, and owned the core calculation module of a multi-platform rebate system.
+Outside work I keep maintaining open-source projects and a quantitative-trading system, and I explore engineering AI into content generation, decision support and internal tooling. I believe in simple, direct code and long-term, steadily evolving systems.',
+    'Huang Xin · huangxin.work'
 );
 
-INSERT INTO experience (sort_order, visible, period, role, org, description) VALUES
+INSERT INTO experience (sort_order, visible, period, role, org, description,
+    period_en, role_en, org_en, description_en) VALUES
 (
     1, TRUE, '2022.04 — 至今', 'Java 后端工程师', '蘑菇街',
-    '负责商品、商家、营销玩法、商业化资金链路与支付能力建设，覆盖入驻审核、抽奖发奖、会员日、Google Pay 与混合支付接入；参与实时风控系统交接与稳定性治理，建设限流、熔断、降级及异常隔离能力，并承担跨团队复杂系统支援与交付。'
+    '负责商品、商家、营销玩法、商业化资金链路与支付能力建设，覆盖入驻审核、抽奖发奖、会员日、Google Pay 与混合支付接入；参与实时风控系统交接与稳定性治理，建设限流、熔断、降级及异常隔离能力，并承担跨团队复杂系统支援与交付。',
+    '2022.04 — Present', 'Java Backend Engineer', 'Mogujie',
+    'Owned product, merchant, marketing-campaign, monetization money-flow and payment capabilities — including merchant onboarding review, lucky-draw payouts, membership days, Google Pay and hybrid payment integration. Took over and stabilized a real-time risk-control system, building rate limiting, circuit breaking, graceful degradation and fault isolation, and supported complex cross-team system delivery.'
 ),
 (
     2, TRUE, '2021.04 — 2021.09', '全栈开发工程师', '腾讯',
-    '使用 Python 独立开发内部安全平台并参与云产品安全问题修复；参与 CI/CD 流水线建设，使用 Docker、跳板机及企业级 Git 规范完成交付。'
+    '使用 Python 独立开发内部安全平台并参与云产品安全问题修复；参与 CI/CD 流水线建设，使用 Docker、跳板机及企业级 Git 规范完成交付。',
+    '2021.04 — 2021.09', 'Full-stack Engineer', 'Tencent',
+    'Independently built an internal security platform in Python and helped fix security issues in cloud products. Contributed to the CI/CD pipeline, delivering with Docker, bastion hosts and enterprise Git conventions.'
 ),
 (
     3, TRUE, '2020.11 — 2021.01', '全栈开发工程师', '西安旭瑞视讯智能科技有限公司',
-    '参与后台管理、智能摄像头控制及视频会议系统建设，负责 Nginx 推拉流控制，接触 WebRTC、RTMP 等音视频协议与业务架构。'
+    '参与后台管理、智能摄像头控制及视频会议系统建设，负责 Nginx 推拉流控制，接触 WebRTC、RTMP 等音视频协议与业务架构。',
+    '2020.11 — 2021.01', 'Full-stack Engineer', 'Xi''an Xurui Vision Intelligent Technology',
+    'Worked on admin management, smart-camera control and video-conferencing systems, handling Nginx push/pull streaming and working with audio/video protocols such as WebRTC and RTMP and their business architecture.'
 );
 
 INSERT INTO project (
     sort_order, visible, name, slug, link, description, role, period, meta,
-    content_markdown, detail_published
+    content_markdown, detail_published,
+    name_en, description_en, role_en, period_en, meta_en, content_markdown_en
 ) VALUES
 (
     1, TRUE, '多平台返利体系', 'rebate-platform', NULL,
@@ -83,7 +111,41 @@ Java / Spring Boot
 ## 项目结果
 
 核心模块能够支撑多个平台快速接入，返利规则扩展成本和线上排查成本明显降低，并持续稳定支撑商业化返利业务。出于业务保密要求，页面不展示具体资金规模和内部系统名称。',
-    TRUE
+    TRUE,
+    'Multi-platform Rebate System',
+    'Owned the core rebate module of the monetization money-flow: a unified calculation model, differentiated rules, reverse refund claw-back, and an insufficient-balance deferred-deduction strategy. Configurable strategies and generic interfaces let new platforms integrate quickly, while end-to-end traceability was guaranteed together with the finance, risk-control and middle-platform teams, steadily supporting the rebate business.',
+    'Core Module Owner', '2024.11 — Present',
+    'Core Module Owner
+Java / Spring Boot
+Money-flow
+2024.11 — Present',
+    '## Background
+
+The company needed to unify rebate calculation across different platforms, users and inventory conditions. The existing capability was scattered across multiple business flows, making rules, reverse refunds and troubleshooting expensive to extend.
+
+## Key Challenges
+
+- Rebate definitions, budgets and deduction rules differed across platforms;
+- Forward calculation and refund claw-back had to stay consistent and traceable;
+- When an account balance was insufficient after a refund, a clear boundary was needed between fund safety and business compensation;
+- Onboarding a new platform could not keep duplicating the whole money-flow;
+- Finance, risk control and the business middle-platform all had to reconcile together.
+
+## What I Did
+
+I designed, built and shipped the core calculation module, splitting the rebate process into stable boundaries: rule matching, amount calculation, result persistence and reverse claw-back. Platform differences were isolated through strategy configuration and generic interfaces; for the insufficient-balance case I designed a deductible-cap and deferred-deduction strategy, and added calculation snapshots, idempotency keys and flow logging.
+
+## Solution Highlights
+
+1. **Unified calculation model**: campaigns, users, inventory and platform conditions converge into a standard input;
+2. **Strategy-based extension**: platform differences live in configuration and strategies, avoiding branch explosion in the main flow;
+3. **Forward/reverse consistency**: refunds claw back based on the original calculation snapshot, so rule changes never affect historical orders;
+4. **Deduction boundary**: when the balance is insufficient, deduct up to the maximum allowed, avoiding over-deduction while keeping a basis for later compensation;
+5. **Observability**: key decisions and fund changes can be traced per order for cross-team reconciliation.
+
+## Outcome
+
+The core module now supports fast onboarding of multiple platforms, with rebate-rule extension cost and production troubleshooting cost noticeably lower, and it steadily backs the monetization rebate business. For confidentiality, specific fund figures and internal system names are not shown here.'
 ),
 (
     2, TRUE, '商品系统迁移', 'product-migration', NULL,
@@ -121,7 +183,42 @@ Java / Spring Boot
 ## 项目结果
 
 完成 **15,000+ 商品**及相关类目、映射数据迁移，通过全量核对确保迁移前后数据一致；迁移过程保持业务连续，未发生重大线上事故，并降低了后续商品模型维护成本。',
-    TRUE
+    TRUE,
+    'Product System Migration',
+    'Led a high-risk migration of the core product pipeline, keeping compatibility across multiple categories, SKUs, virtual goods, membership goods and external product mappings. Designed model mapping, old/new product identifiers, dual-write reconciliation and canary cutover, and migrated 15,000+ products and related data with zero major incidents and zero business interruption.',
+    'Technical Lead', '2025.05 — 2025.08',
+    'Technical Lead
+Dual-write / Canary
+15,000+ Products
+2025.05 — 2025.08',
+    '## Background
+
+The core product pipeline had to migrate from the legacy product model to a new system. The pipeline connects front and back office, categories, inventory and several external mappings, so any data drift could directly hit transactions.
+
+## Key Challenges
+
+- Old and new product models were not one-to-one;
+- Compatibility was required across multiple categories, SKUs, virtual goods, membership goods and external product mappings;
+- Business kept writing during the migration;
+- Canary release, reconciliation, fast rollback and resumable progress were all required;
+- Multiple systems had to stay eventually consistent.
+
+## What I Did
+
+I owned the migration plan and core pipeline, designing the model mapping, a compatibility layer and an old/new product-identifier strategy, and organized dual-write, historical back-filling, full-set diff reconciliation and staged traffic cutover.
+
+## Migration Steps
+
+1. Define field mapping, defaults and bad-data handling across categories, SKUs and special product types;
+2. Minimize intrusion into the existing pipeline with a compatibility layer;
+3. Roll out dual-write and reconciliation, continuously observing and fixing old/new data diffs;
+4. Migrate products, categories and external mapping data in batches;
+5. Shift read traffic gradually via old/new identifiers and a canary switch;
+6. Keep rollback available, and close out once stable.
+
+## Outcome
+
+Migrated **15,000+ products** plus related category and mapping data, using full-set reconciliation to guarantee data consistency before and after. The migration stayed business-continuous with no major production incident, and lowered the maintenance cost of the product model afterwards.'
 ),
 (
     3, TRUE, '实时风控系统拆分与对外输出', 'realtime-risk-control', NULL,
@@ -156,7 +253,39 @@ Java / Spring Boot
 ## 项目结果
 
 系统从“内部能力”升级为可独立部署和标准化接入的工程产品，降低了外部环境适配和后续维护成本。',
-    TRUE
+    TRUE,
+    'Real-time Risk Control: Decoupling & External Delivery',
+    'Turned the company''s internal real-time risk-control capability into an independently deliverable engineering product. Decoupled the rule engine, feature platform and decision modules from data and messaging dependencies, and provided an SDK, deployment/migration, canary rollback, load testing and standardized onboarding docs.',
+    'Core System Owner', '2024.08 — 2024.10',
+    'Core System Owner
+Real-time Risk Control
+Decoupling / SDK
+2024.08 — 2024.10',
+    '## Background
+
+The original real-time risk-control capability was deeply coupled to internal infrastructure and had to be split into an engineering product that could be deployed and delivered independently in external environments.
+
+## Key Challenges
+
+- The rule engine, feature platform and decision flow carried internal dependencies;
+- Messaging, storage and config center had to adapt to different deployment environments;
+- External delivery required installation, migration, canary and rollback plans;
+- The risk-control path had strict requirements on latency, stability and traceability.
+
+## What I Did
+
+I owned boundary analysis, dependency decoupling and the delivery plan, splitting internal services into standard interfaces and a configurable adaptation layer, and provided an onboarding SDK, deployment docs, load tests and failure-drill plans.
+
+## Reliability Design
+
+- Core interfaces carry timeout, rate limiting, circuit breaking and degradation;
+- Abnormal messages are isolated and support compensating replay;
+- Key decisions keep version, input digest and result trace;
+- Config changes support canary release and fast rollback.
+
+## Outcome
+
+The system was upgraded from an "internal capability" into an independently deployable, standardized-onboarding engineering product, cutting the cost of adapting to external environments and of later maintenance.'
 ),
 (
     4, TRUE, 'Mango', 'mango-campus', 'https://github.com/Xin-Felix/Mango',
@@ -180,7 +309,28 @@ Mango 是我在校期间从零开发的开源校园社区，包含表白墙、�
 ## 收获
 
 这个项目让我完整经历了需求分析、数据建模、接口设计、上线运行、用户反馈和项目归档。代码目前保留用于学习参考。',
-    TRUE
+    TRUE,
+    'Mango',
+    'An open-source campus community WeChat Mini Program built from scratch, with modules for a confession wall, lost & found, second-hand trading, forums and carpooling. It went through a full launch, operation and archival lifecycle.',
+    'Solo Developer', '2020 — 2024',
+    '⭐ Open Source
+Java / WeChat Mini Program
+Spring Boot / MyBatis
+2020 — 2024',
+    '## Overview
+
+Mango is an open-source campus community I built from scratch during university, with modules for a confession wall, lost & found, second-hand trading, forums and carpooling.
+
+## Implementation
+
+- WeChat Mini Program front end;
+- Spring Boot + MyBatis back end;
+- MySQL storage;
+- Full flows for content publishing, comments, notifications and admin management.
+
+## Takeaways
+
+This project took me through the full cycle of requirement analysis, data modeling, API design, launch, user feedback and archival. The code is kept for learning reference.'
 ),
 (
     5, TRUE, '量化交易系统', 'quantitative-trading', 'https://github.com/Xin-Felix/QuantitativeTrading',
@@ -204,10 +354,32 @@ ClickHouse
 ## 当前状态
 
 项目持续迭代中，主要服务个人研究。后续会逐步补充回测、任务编排和可观测性说明。',
-    TRUE
+    TRUE,
+    'Quantitative Trading System',
+    'A self-built stock quantitative system: ingesting the tushare data source, storing full minute-level K-line data in ClickHouse, and developing stock-selection factors plus morning/evening report push.',
+    'Solo Developer', 'Long-term Personal Project',
+    'Python
+ClickHouse
+Data Engineering
+Long-term Personal Project',
+    '## Overview
+
+A self-built stock quantitative research system for accumulating market data, running factor experiments and recording daily observations.
+
+## Implementation
+
+- Python for data ingestion and research tasks;
+- Integrates the tushare data source;
+- Stores full minute-level K-line data in ClickHouse;
+- Builds stock-selection factors and morning/evening report push.
+
+## Current Status
+
+The project is under ongoing iteration, mainly serving personal research. Backtesting, task orchestration and observability notes will be added over time.'
 );
 
-INSERT INTO contact_link (sort_order, visible, label, text, href) VALUES
-(1, TRUE, 'GitHub', 'github.com/Xin-Felix', 'https://github.com/Xin-Felix'),
-(2, TRUE, 'Email', '1538933906@qq.com', 'mailto:1538933906@qq.com'),
-(3, TRUE, '微信', '1538933906（请注明来意）', NULL);
+INSERT INTO contact_link (sort_order, visible, label, text, href,
+    label_en, text_en) VALUES
+(1, TRUE, 'GitHub', 'github.com/Xin-Felix', 'https://github.com/Xin-Felix', 'GitHub', 'github.com/Xin-Felix'),
+(2, TRUE, 'Email', '1538933906@qq.com', 'mailto:1538933906@qq.com', 'Email', '1538933906@qq.com'),
+(3, TRUE, '微信', '1538933906（请注明来意）', NULL, 'WeChat', '1538933906 (please note your purpose)');
